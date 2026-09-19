@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { bandColor, useOrigin } from "@/components/ui";
+import { Band, Tag, useOrigin } from "@/components/ui";
 
 const TICKERS = ["HOOD", "COIN", "NVDA", "TSLA", "AAPL", "MSTR", "SPY", "TLT"];
 
@@ -48,26 +48,29 @@ export default function Playground() {
   const origin = useOrigin();
 
   return (
-    <div className="stack" style={{ paddingTop: 18 }}>
+    <div className="stack-lg" style={{ paddingTop: 50 }}>
       <div>
-        <div className="eyebrow">Playground</div>
-        <h1 style={{ fontSize: 30, margin: "10px 0 10px" }}>
-          Call the oracle
+        <div className="eyebrow" style={{ marginBottom: 18 }}>
+          Playground
+        </div>
+        <h1 className="d1" style={{ fontSize: "clamp(40px,7vw,78px)", marginBottom: 20 }}>
+          Call the oracle.
         </h1>
-        <p style={{ color: "var(--n-800)", maxWidth: "64ch", margin: 0 }}>
-          Live requests against the running service. No key required. Each
-          response is signed, so the price and its band travel together.
+        <p className="lede">
+          Live requests against the running service. No key required. Every
+          response is signed, so the price and its band travel together and
+          neither can be stripped from the other.
         </p>
       </div>
 
-      <section className="panel">
-        <div className="panel-head">
-          <span className="panel-title">Instrument</span>
+      <section className="card">
+        <div className="card-head">
+          <span className="card-title">Instrument</span>
           <span style={{ marginLeft: "auto" }} className="muted small">
             {status !== null ? `HTTP ${status}` : ""} {ms !== null ? `· ${ms}ms` : ""}
           </span>
         </div>
-        <div className="panel-body">
+        <div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {TICKERS.map((t) => (
               <button
@@ -77,9 +80,9 @@ export default function Playground() {
                 style={
                   t === ticker
                     ? {
-                        background: "var(--accent-dim)",
-                        borderColor: "var(--accent-line)",
-                        color: "var(--accent-bright)",
+                        background: "var(--violet)",
+                        borderColor: "var(--violet)",
+                        color: "#fff",
                         fontWeight: 700,
                       }
                     : undefined
@@ -99,7 +102,7 @@ export default function Playground() {
           </div>
 
           <div style={{ marginTop: 14 }}>
-            <pre className="code">
+            <pre>
               <span className="c">$</span> curl {origin}/api/quote/
               <span className="n">{ticker}</span>
             </pre>
@@ -108,38 +111,32 @@ export default function Playground() {
       </section>
 
       {meta.price !== undefined ? (
-        <section className="grid grid-4">
-          <div className="stat">
-            <div className="stat-label">Price</div>
-            <div className="stat-value">${meta.price.toFixed(2)}</div>
+        <section className="grid g4">
+          <div className="card fill-cream">
+            <div className="stat-k">Price</div>
+            <div className="stat-n">${meta.price.toFixed(2)}</div>
           </div>
-          <div className="stat">
-            <div className="stat-label">Confidence</div>
-            <div
-              className="stat-value"
-              style={{ color: bandColor(meta.bps ?? 0) }}
-            >
-              ±{((meta.bps ?? 0) / 100).toFixed(2)}%
+          <div className="card fill-amber">
+            <div className="stat-k">Confidence</div>
+            <div className="stat-n">±{((meta.bps ?? 0) / 100).toFixed(2)}%</div>
+            <div style={{ marginTop: 14 }}>
+              <Band bps={meta.bps ?? 0} />
             </div>
           </div>
-          <div className="stat">
-            <div className="stat-label">Provenance</div>
-            <div className="stat-value" style={{ fontSize: 17 }}>
-              {meta.prov}
-            </div>
+          <div className="card">
+            <div className="stat-k">Provenance</div>
+            <div className="stat-n" style={{ fontSize: 26 }}>{meta.prov}</div>
           </div>
-          <div className="stat">
-            <div className="stat-label">Session</div>
-            <div className="stat-value" style={{ fontSize: 17 }}>
-              {meta.session}
-            </div>
+          <div className="card">
+            <div className="stat-k">Session</div>
+            <div className="stat-n" style={{ fontSize: 26 }}>{meta.session}</div>
           </div>
         </section>
       ) : null}
 
-      <section className="panel">
-        <div className="panel-head">
-          <span className="panel-title">Response</span>
+      <section className="card">
+        <div className="card-head">
+          <span className="card-title">Response</span>
           <button
             className="btn"
             style={{ marginLeft: "auto", padding: "4px 10px", fontSize: 11.5 }}
@@ -148,19 +145,19 @@ export default function Playground() {
             Copy JSON
           </button>
         </div>
-        <div className="panel-body">
-          <pre className="code" style={{ maxHeight: 460, overflowY: "auto" }}>
+        <div>
+          <pre style={{ maxHeight: 460, overflowY: "auto" }}>
             {raw || "…"}
           </pre>
         </div>
       </section>
 
-      <section className="panel">
-        <div className="panel-head">
-          <span className="panel-title">Other endpoints</span>
+      <section className="card">
+        <div className="card-head">
+          <span className="card-title">Other endpoints</span>
         </div>
-        <div className="panel-body">
-          <pre className="code">
+        <div>
+          <pre>
             <span className="c"># every instrument, one proxy snapshot</span>
             {`\n`}curl {origin}/api/quotes{`\n\n`}
             <span className="c"># upstream reachability and signer</span>

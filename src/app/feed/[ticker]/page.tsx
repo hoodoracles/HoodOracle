@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-
 import { use, useCallback, useEffect, useState } from "react";
-import { Band, ProvTag, SessionTag, Stat, bandColor, useOrigin } from "@/components/ui";
+import { Band, Glyph, Tag, fillFor, useOrigin } from "@/components/ui";
 
 interface Payload {
   quote: {
@@ -40,6 +39,7 @@ interface Payload {
     coveragePct: number | null;
     calibrated: boolean;
   };
+  sources: { source: string; price: number }[];
   proxies: { key: string; price: number; moveSinceGapPct: number }[];
   error?: string;
 }
@@ -74,195 +74,219 @@ export default function FeedPage({
 
   if (err) {
     return (
-      <div className="stack" style={{ paddingTop: 20 }}>
-        <h1 style={{ fontSize: 24 }}>{ticker}</h1>
-        <div className="panel">
-          <div className="panel-body" style={{ color: "var(--bad)" }}>
-            {err}
-          </div>
+      <div className="stack-lg" style={{ paddingTop: 50 }}>
+        <div className="card fill-coral">
+          <div className="stat-k">{ticker}</div>
+          <h1 className="d3" style={{ marginBottom: 10 }}>
+            Could not price this instrument.
+          </h1>
+          <p style={{ margin: 0 }}>{err}</p>
         </div>
-        <Link className="btn" href="/">
-          Back to feeds
-        </Link>
+        <div>
+          <Link className="btn" href="/">
+            Back to feeds
+          </Link>
+        </div>
       </div>
     );
   }
 
   if (!d) {
     return (
-      <div className="stack" style={{ paddingTop: 20 }}>
-        <div className="muted">Loading {ticker}…</div>
+      <div style={{ paddingTop: 60 }} className="muted">
+        Loading {ticker}…
       </div>
     );
   }
 
   const q = d.quote;
-  const color = bandColor(q.confidenceBps);
+  const fill = fillFor(d.readable.provenance, q.confidenceBps);
 
   return (
-    <div className="stack" style={{ paddingTop: 16 }}>
-      <div>
+    <div className="stack-lg" style={{ paddingTop: 50 }}>
+      <section>
         <Link href="/" className="small muted">
           ← all feeds
         </Link>
+
         <div
           style={{
             display: "flex",
             alignItems: "baseline",
-            gap: 12,
+            gap: 16,
             flexWrap: "wrap",
-            marginTop: 8,
+            margin: "14px 0 26px",
           }}
         >
-          <h1 style={{ fontSize: 30 }}>{q.ticker}</h1>
-          <span className="muted">{d.instrument.name}</span>
-          <SessionTag session={d.readable.session} />
-          <ProvTag provenance={d.readable.provenance} />
+          <h1 className="d1" style={{ fontSize: "clamp(44px,8vw,86px)" }}>
+            {q.ticker}
+          </h1>
+          <span className="muted" style={{ fontSize: 16 }}>
+            {d.instrument.name}
+          </span>
+          <Tag onDark>{d.readable.session}</Tag>
+          <Tag onDark>{d.readable.provenance}</Tag>
         </div>
-      </div>
 
-      <section className="panel">
-        <div className="panel-body">
+        <div className={`card fill-${fill}`} style={{ padding: 30 }}>
+          <Glyph kind="rings" />
           <div
             style={{
               display: "flex",
-              gap: 30,
+              gap: 44,
               flexWrap: "wrap",
-              alignItems: "flex-end",
+              marginBottom: 24,
             }}
           >
             <div>
-              <div className="stat-label">Published price</div>
-              <div className="mono-lg">${q.price.toFixed(2)}</div>
+              <div className="stat-k">Published price</div>
+              <div className="stat-n">${q.price.toFixed(2)}</div>
             </div>
             <div>
-              <div className="stat-label">Confidence band</div>
-              <div className="mono-lg" style={{ color }}>
-                {d.readable.confidencePct}
-              </div>
+              <div className="stat-k">Confidence</div>
+              <div className="stat-n">{d.readable.confidencePct}</div>
             </div>
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <div className="stat-label">Range a consumer should assume</div>
-              <div style={{ fontSize: 15, fontWeight: 600 }}>
+            <div style={{ minWidth: 220, flex: 1 }}>
+              <div className="stat-k">Assume this range</div>
+              <div className="stat-n" style={{ fontSize: 22 }}>
                 ${d.readable.band[0].toFixed(2)} — $
                 {d.readable.band[1].toFixed(2)}
               </div>
-              <div style={{ marginTop: 8 }}>
-                <Band bps={q.confidenceBps} />
-              </div>
             </div>
           </div>
 
-          <div
-            className="callout"
-            style={{ borderLeftColor: color, background: "transparent" }}
-          >
+          <Band bps={q.confidenceBps} />
+
+          <p style={{ marginTop: 20, marginBottom: 0, fontSize: 13.5 }}>
             <strong>How this number was reached.</strong> {q.method}
+          </p>
+        </div>
+      </section>
+
+      <section className="grid g4">
+        <div className="card">
+          <div className="stat-k">Anchor, on tape</div>
+          <div className="stat-n">${q.anchorPrice.toFixed(2)}</div>
+          <div className="stat-s">last observed close</div>
+        </div>
+        <div className="card">
+          <div className="stat-k">Drift applied</div>
+          <div className="stat-n">
+            {q.driftBps === 0
+              ? "none"
+              : `${q.driftBps > 0 ? "+" : ""}${q.driftBps.toFixed(1)}`}
+            {q.driftBps === 0 ? "" : <span style={{ fontSize: 18 }}>bps</span>}
+          </div>
+          <div className="stat-s">
+            fitted β {d.calibration.beta.toFixed(3)} · R²{" "}
+            {d.calibration.r2.toFixed(2)}
+          </div>
+        </div>
+        <div className="card">
+          <div className="stat-k">Last print</div>
+          <div className="stat-n">{d.readable.staleness}</div>
+          <div className="stat-s">ago</div>
+        </div>
+        <div className="card">
+          <div className="stat-k">{d.readable.nextSession} in</div>
+          <div className="stat-n">{d.readable.opensIn}</div>
+          <div className="stat-s">next session change</div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="d2" style={{ marginBottom: 16 }}>
+          Sources and calibration
+        </h2>
+        <div className="grid g2">
+          <div className="card">
+            <div className="card-head">
+              <span className="card-title">
+                Providers that resolved ({q.sourceCount})
+              </span>
+            </div>
+            {d.sources.map((s) => (
+              <div
+                key={s.source}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  padding: "8px 0",
+                  borderBottom: "1px solid var(--line-soft)",
+                }}
+              >
+                <span>{s.source}</span>
+                <span className="muted">${s.price.toFixed(4)}</span>
+              </div>
+            ))}
+            <div className="stat-s" style={{ marginTop: 12 }}>
+              dispersion {q.maxDeviationBps.toFixed(2)} bps
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <span className="card-title">Fitted on real gaps</span>
+            </div>
+            <div className="grid g2" style={{ gap: 10 }}>
+              <div>
+                <div className="stat-k">Beta</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>
+                  {d.calibration.beta.toFixed(3)}
+                </div>
+                <div className="stat-s">prior was {d.calibration.priorBeta}</div>
+              </div>
+              <div>
+                <div className="stat-k">Coverage</div>
+                <div
+                  style={{ fontSize: 20, fontWeight: 700, color: "var(--mint)" }}
+                >
+                  {d.calibration.coveragePct?.toFixed(1)}%
+                </div>
+                <div className="stat-s">{d.calibration.samples} gaps</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="grid grid-4">
-        <Stat
-          label="Anchor (on-tape)"
-          value={`$${q.anchorPrice.toFixed(2)}`}
-          sub="last observed close"
-        />
-        <Stat
-          label="Drift applied"
-          value={
-            q.driftBps === 0
-              ? "none"
-              : `${q.driftBps > 0 ? "+" : ""}${q.driftBps.toFixed(1)}bps`
-          }
-          sub={`fitted beta ${d.calibration.beta.toFixed(3)} · R² ${d.calibration.r2.toFixed(2)}`}
-          color={q.driftBps === 0 ? undefined : "var(--accent)"}
-        />
-        <Stat
-          label="Last print"
-          value={d.readable.staleness}
-          sub="ago"
-          color={q.stalenessSeconds > 3600 ? "var(--warn)" : undefined}
-        />
-        <Stat
-          label={`${d.readable.nextSession} in`}
-          value={d.readable.opensIn}
-          sub="next session change"
-        />
-      </section>
-
-      <section className="panel">
-        <div className="panel-head">
-          <span className="panel-title">Signed payload</span>
-          <span className="muted small">
-            verify the band and the price came from the same key
-          </span>
-        </div>
-        <div className="panel-body">
-          <table className="prose-table" style={{ width: "100%", fontSize: 12 }}>
-            <tbody>
-              {[
+      <section>
+        <h2 className="d2" style={{ marginBottom: 16 }}>
+          Signed payload
+        </h2>
+        <div className="card">
+          <div className="card-head">
+            <span className="card-title">
+              price and band signed by the same key
+            </span>
+          </div>
+          <div style={{ fontSize: 12 }}>
+            {(
+              [
                 ["signer", d.signer],
                 ["digest", d.digest],
                 ["signature", d.signature],
                 ["lastTradeTime", String(q.lastTradeTime)],
                 ["publishTime", String(q.publishTime)],
-                ["sourceCount", String(q.sourceCount)],
-                ["maxDeviationBps", String(q.maxDeviationBps)],
-              ].map(([k, v]) => (
-                <tr key={k}>
-                  <td
-                    style={{
-                      color: "var(--text-faint)",
-                      padding: "5px 12px 5px 0",
-                      whiteSpace: "nowrap",
-                      verticalAlign: "top",
-                    }}
-                  >
-                    {k}
-                  </td>
-                  <td
-                    style={{
-                      wordBreak: "break-all",
-                      padding: "5px 0",
-                      color: "var(--n-800)",
-                    }}
-                  >
-                    {v}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {d.proxies.length ? (
-        <section className="panel">
-          <div className="panel-head">
-            <span className="panel-title">Proxy used for drift</span>
-          </div>
-          <div className="panel-body grid grid-2">
-            {d.proxies.map((p) => (
-              <Stat
-                key={p.key}
-                label={`${p.key} · since close`}
-                value={`${p.moveSinceGapPct >= 0 ? "+" : ""}${p.moveSinceGapPct.toFixed(3)}%`}
-                sub={`$${p.price.toLocaleString("en-US")}`}
-                color={p.moveSinceGapPct >= 0 ? "var(--ok)" : "var(--bad)"}
-              />
+              ] as const
+            ).map(([k, v]) => (
+              <div
+                key={k}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "130px 1fr",
+                  gap: 12,
+                  padding: "7px 0",
+                  borderBottom: "1px solid var(--line-soft)",
+                }}
+              >
+                <span className="muted">{k}</span>
+                <span style={{ wordBreak: "break-all" }}>{v}</span>
+              </div>
             ))}
           </div>
-        </section>
-      ) : null}
-
-      <section className="panel">
-        <div className="panel-head">
-          <span className="panel-title">Fetch this feed</span>
-        </div>
-        <div className="panel-body">
-          <pre className="code">
-            <span className="c"># signed quote, ready to post on-chain</span>
+          <pre style={{ marginBottom: 0 }}>
+            <span className="c"># fetch it yourself</span>
             {"\n"}curl {origin}/api/quote/{q.ticker}
           </pre>
         </div>

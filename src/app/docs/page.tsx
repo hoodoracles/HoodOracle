@@ -5,9 +5,9 @@ export const metadata = {
 
 export default function Docs() {
   return (
-    <div className="prose" style={{ paddingTop: 18 }}>
+    <div className="prose" style={{ paddingTop: 50 }}>
       <div className="eyebrow">Reference</div>
-      <h1 style={{ fontSize: 30, margin: "10px 0 16px" }}>Docs</h1>
+      <h1 className="d1" style={{ fontSize: "clamp(40px,7vw,78px)", margin: "18px 0 26px" }}>Docs</h1>
 
       <p>
         Three endpoints, no auth, JSON only. Every quote is signed so a consumer
@@ -17,7 +17,7 @@ export default function Docs() {
 
       <h2>Endpoints</h2>
 
-      <table>
+      <div className="tbl"><table>
         <thead>
           <tr>
             <th>Endpoint</th>
@@ -27,19 +27,19 @@ export default function Docs() {
         <tbody>
           <tr>
             <td>
-              <code className="inline">GET /api/quotes</code>
+              <code>GET /api/quotes</code>
             </td>
             <td>Every tracked instrument, priced against one proxy snapshot.</td>
           </tr>
           <tr>
             <td>
-              <code className="inline">GET /api/quote/:ticker</code>
+              <code>GET /api/quote/:ticker</code>
             </td>
             <td>One instrument, signed, with the digest and signer address.</td>
           </tr>
           <tr>
             <td>
-              <code className="inline">GET /api/health</code>
+              <code>GET /api/health</code>
             </td>
             <td>
               Upstream reachability, signer address, current session. Returns
@@ -47,11 +47,11 @@ export default function Docs() {
             </td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h2>Quote fields</h2>
 
-      <table>
+      <div className="tbl"><table>
         <thead>
           <tr>
             <th>Field</th>
@@ -61,22 +61,22 @@ export default function Docs() {
         <tbody>
           <tr>
             <td>
-              <code className="inline">price</code>
+              <code>price</code>
             </td>
             <td>
-              The number to use. Equal to <code className="inline">anchorPrice</code>{" "}
+              The number to use. Equal to <code>anchorPrice</code>{" "}
               when provenance is TRADED or STALE; drifted when DERIVED.
             </td>
           </tr>
           <tr>
             <td>
-              <code className="inline">anchorPrice</code>
+              <code>anchorPrice</code>
             </td>
             <td>The last price actually observed on tape, before modelling.</td>
           </tr>
           <tr>
             <td>
-              <code className="inline">confidenceBps</code>
+              <code>confidenceBps</code>
             </td>
             <td>
               Two-sided uncertainty in basis points. Capped at 1500; beyond that
@@ -85,19 +85,19 @@ export default function Docs() {
           </tr>
           <tr>
             <td>
-              <code className="inline">session</code>
+              <code>session</code>
             </td>
             <td>0 REGULAR · 1 PRE · 2 POST · 3 CLOSED · 4 HOLIDAY</td>
           </tr>
           <tr>
             <td>
-              <code className="inline">provenance</code>
+              <code>provenance</code>
             </td>
             <td>0 TRADED · 1 DERIVED · 2 STALE</td>
           </tr>
           <tr>
             <td>
-              <code className="inline">lastTradeTime</code>
+              <code>lastTradeTime</code>
             </td>
             <td>
               Unix seconds of the last print, reconciled against the exchange
@@ -106,22 +106,22 @@ export default function Docs() {
           </tr>
           <tr>
             <td>
-              <code className="inline">driftBps</code>
+              <code>driftBps</code>
             </td>
             <td>How far the anchor was moved by the model. Zero when TRADED.</td>
           </tr>
           <tr>
             <td>
-              <code className="inline">maxDeviationBps</code>
+              <code>maxDeviationBps</code>
             </td>
             <td>Spread between the highest and lowest source reading.</td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h2>Provenance, and how to treat each value</h2>
 
-      <table>
+      <div className="tbl"><table>
         <thead>
           <tr>
             <th>Value</th>
@@ -132,21 +132,21 @@ export default function Docs() {
         <tbody>
           <tr>
             <td>
-              <span className="tag tag-ok">TRADED</span>
+              <span className="tag tag-on-dark" style={{ color: "var(--mint)" }}>TRADED</span>
             </td>
             <td>Observed print, session open, under 5 minutes old.</td>
             <td>Settle, liquidate, mark.</td>
           </tr>
           <tr>
             <td>
-              <span className="tag tag-accent">DERIVED</span>
+              <span className="tag tag-on-dark" style={{ color: "var(--amber)" }}>DERIVED</span>
             </td>
             <td>Tape shut. Last close drifted against a 24/7 proxy.</td>
             <td>Mark to market, display, size positions. Not liquidate.</td>
           </tr>
           <tr>
             <td>
-              <span className="tag tag-bad">STALE</span>
+              <span className="tag tag-on-dark" style={{ color: "var(--coral)" }}>STALE</span>
             </td>
             <td>
               No usable anchor, or the tape is open and upstream stopped
@@ -158,11 +158,11 @@ export default function Docs() {
             </td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h2>The confidence model</h2>
 
-      <pre className="code">{`live print:
+      <pre>{`live print:
   bps = BASE[session] + maxDeviationBps       `}<span className="c">{`// 8 regular, 35 pre/post`}</span>{`
 
 gap (DERIVED or STALE):
@@ -173,10 +173,10 @@ gap (DERIVED or STALE):
 bps = clamp(bps, 1, 1500)`}</pre>
 
       <p>
-        Both <code className="inline">sigma</code> and{" "}
-        <code className="inline">k</code> come from{" "}
-        <code className="inline">calibration.json</code>, fitted by{" "}
-        <code className="inline">npm run calibrate</code> against two years of
+        Both <code>sigma</code> and{" "}
+        <code>k</code> come from{" "}
+        <code>calibration.json</code>, fitted by{" "}
+        <code>npm run calibrate</code> against two years of
         realised close-to-open gaps. The measured exponent is{" "}
         <strong>k ≈ 0.107</strong>, not the 0.5 a random walk in calendar time
         would imply. See <a href="/why">the problem</a> for why.
@@ -203,13 +203,13 @@ bps = clamp(bps, 1, 1500)`}</pre>
         The band claims to be a 95% interval, so that claim is tested by
         replaying every historical gap and counting how many landed inside it.
         All eight instruments fall between 93.4% and 96.4%, across roughly 500
-        gaps each. Re-run <code className="inline">npm run calibrate</code> to
+        gaps each. Re-run <code>npm run calibrate</code> to
         reproduce.
       </p>
 
       <h2>Verifying a signature</h2>
 
-      <pre className="code">{`import { verifyMessage } from "viem";
+      <pre>{`import { verifyMessage } from "viem";
 
 const r = await fetch("/api/quote/HOOD").then((r) => r.json());
 
@@ -220,9 +220,9 @@ const ok = await verifyMessage({
 });`}</pre>
 
       <p>
-        The digest is <code className="inline">keccak256</code> over the
+        The digest is <code>keccak256</code> over the
         abi-encoded tuple{" "}
-        <code className="inline">
+        <code>
           (string ticker, uint128 price, uint64 confidenceBps, uint8 session,
           uint8 provenance, uint8 sourceCount, uint64 maxDeviationBps, uint64
           lastTradeTime, uint64 publishTime)
@@ -250,9 +250,9 @@ const ok = await verifyMessage({
           rather than extrapolated.
         </li>
         <li>
-          <code className="inline">sourceCount</code> reflects providers that
+          <code>sourceCount</code> reflects providers that
           actually resolved. With only Yahoo enabled it is 1 and{" "}
-          <code className="inline">maxDeviationBps</code> is necessarily 0. Add
+          <code>maxDeviationBps</code> is necessarily 0. Add
           a second provider key for those fields to carry signal.
         </li>
       </ul>

@@ -19,9 +19,9 @@ const CALENDAR = [
 
 export default function Why() {
   return (
-    <div className="prose" style={{ paddingTop: 18 }}>
+    <div className="prose" style={{ paddingTop: 50 }}>
       <div className="eyebrow">The problem</div>
-      <h1 style={{ fontSize: 30, margin: "10px 0 16px" }}>
+      <h1 className="d1" style={{ fontSize: "clamp(40px,7vw,78px)", margin: "18px 0 26px" }}>
         A third of every week has no price.
       </h1>
 
@@ -34,7 +34,7 @@ export default function Why() {
 
       <p>Here is the actual week:</p>
 
-      <table>
+      <div className="tbl"><table>
         <thead>
           <tr>
             <th>When</th>
@@ -51,13 +51,13 @@ export default function Why() {
                 {hours}
               </td>
               <td>
-                <span className={`tag tag-${tone}`}>{state}</span>
+                <span className="tag tag-on-dark">{state}</span>
               </td>
               <td className="muted">{meaning}</td>
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
 
       <p>
         Roughly a third of every week has no price discovery at all. A tokenised
@@ -68,13 +68,13 @@ export default function Why() {
 
       <p>
         They return one number. A lending market reading{" "}
-        <code className="inline">HOOD = 119.83</code> cannot tell a live
+        <code>HOOD = 119.83</code> cannot tell a live
         consolidated print from Friday&apos;s close warmed over for two days. So
         it has to assume the worst at all times, and prices that assumption into
         everyone&apos;s loan-to-value.
       </p>
 
-      <div className="callout callout-warn">
+      <div className="note note-warn">
         <strong>This is not hypothetical.</strong> While building this we found
         a real oracle whose equity endpoint stamps some tickers with fetch time
         rather than print time. Query it at midnight UTC on a Saturday and the
@@ -91,7 +91,7 @@ export default function Why() {
         itself:
       </p>
 
-      <pre className="code">{`struct Quote {
+      <pre>{`struct Quote {
     uint128 price;
     uint64  confidence;    `}<span className="c">{`// bps band, widens as the tape goes cold`}</span>{`
     uint8   session;       `}<span className="c">{`// REGULAR|PRE|POST|CLOSED|HOLIDAY`}</span>{`
@@ -106,13 +106,13 @@ export default function Why() {
       <ul>
         <li>
           allow liquidations only when{" "}
-          <code className="inline">provenance == TRADED</code>
+          <code>provenance == TRADED</code>
         </li>
         <li>
-          scale loan-to-value by <code className="inline">confidence</code>
+          scale loan-to-value by <code>confidence</code>
         </li>
         <li>
-          halt on <code className="inline">maxDeviationBps</code> above a
+          halt on <code>maxDeviationBps</code> above a
           threshold
         </li>
         <li>
@@ -135,20 +135,20 @@ export default function Why() {
 
       <p>
         The first version of this widened the band by{" "}
-        <code className="inline">√t</code>, on the standard argument that
+        <code>√t</code>, on the standard argument that
         uncertainty under a random walk grows with the square root of elapsed
         time. Fitting it against real gaps showed that is not what equities do.
       </p>
 
       <p>
-        Solving for the exponent in <code className="inline">σ ∝ hours^k</code>{" "}
+        Solving for the exponent in <code>σ ∝ hours^k</code>{" "}
         across all eight instruments gives{" "}
         <strong>k = {CAL.timeExponent.toFixed(3)}</strong>, not 0.5. A weekend
         is roughly 3.7 times the clock hours of an overnight gap, yet its
         realised dispersion is only a few percent wider.
       </p>
 
-      <table>
+      <div className="tbl"><table>
         <thead>
           <tr>
             <th>Instrument</th>
@@ -172,7 +172,7 @@ export default function Why() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
 
       <p>
         Calendar time is a poor clock for market risk. Information arrives
@@ -192,12 +192,12 @@ export default function Why() {
 
       <p>
         The band is a two-sided 95% interval,{" "}
-        <code className="inline">1.96 σ</code>. Whether that is honest is a
+        <code>1.96 σ</code>. Whether that is honest is a
         testable question, so it is tested: every historical gap is replayed and
         counted against the published band.
       </p>
 
-      <table>
+      <div className="tbl"><table>
         <thead>
           <tr>
             <th>Instrument</th>
@@ -227,7 +227,7 @@ export default function Why() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
 
       <p>
         Every instrument lands between 93.4% and 96.4% against a 95% target,
@@ -237,7 +237,7 @@ export default function Why() {
         gets no drift applied at all.
       </p>
 
-      <div className="callout callout-warn">
+      <div className="note note-warn">
         <strong>What calibration does not fix.</strong> These betas are fitted
         on two years ending September 2026 and describe that regime. They do not
         anticipate a structural break, and a single headline can move a stock
@@ -258,7 +258,7 @@ export default function Why() {
         The published price is the <strong>median</strong> across whichever
         resolved, so one bad feed cannot drag it, and their disagreement widens
         the band directly through{" "}
-        <code className="inline">maxDeviationBps</code>. Only providers that
+        <code>maxDeviationBps</code>. Only providers that
         report genuine print times may establish freshness; the rest can
         contribute a price but not a timestamp.
       </p>

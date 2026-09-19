@@ -1,90 +1,85 @@
 /*
  * hoodoracle design system
+ * ────────────────────────
+ * Drawn from two references.
  *
- * Tokens derived from the app.moonshotpirates.com capture: JetBrains Mono as
- * the working face, Montserrat for display, a full neutral ramp on near-black,
- * and a periwinkle accent (#7f95eb / #6676f2). Tight radii (2-8px). Adapted
- * here into a trading-terminal register, since the product is read by people
- * checking whether a number can be trusted.
+ * DIA (diadata.org) — the register of a serious oracle: a near-black ground,
+ * one restrained accent, a sans paired with its own monospace sibling, and a
+ * type scale that is not shy (h1 at 64px, display at 120px).
+ *
+ * Moonshot Pirates — the confidence: a WARM dark ground with grain rather than
+ * a cold blue-black, enormous display weight, chunky 20px-radius cards filled
+ * with flat colour, decorative shapes bleeding inside them, and graphic chips
+ * set inline in the headline.
+ *
+ * The synthesis is specific to this product: the card fills are not decoration,
+ * they encode how wide the confidence band is. Mint is tight enough to lean on,
+ * cream is ordinary, amber says size down, coral says do not settle. The colour
+ * tells you how much to trust the number before you have read it.
  */
 
+/* ============================================================== tokens */
+
 :root {
-  /* neutral ramp */
-  --n-000: #000000;
-  --n-050: #0a0a0c;
-  --n-100: #121216;
-  --n-150: #16161b;
-  --n-200: #1a1a20;
-  --n-300: #24242c;
-  --n-400: #33333d;
-  --n-500: #525260;
-  --n-600: #6b6b7a;
-  --n-700: #8e8e9e;
-  --n-800: #bdbdc8;
-  --n-900: #e6e6ec;
-  --n-999: #ffffff;
+  /* Warm near-black. Moonshot's ground is brown-charcoal, not blue-black —
+     that warmth is most of why their page feels inviting rather than clinical. */
+  --ground: #1c1817;
+  --ground-2: #252020;
+  --surface: #2b2524;
+  --surface-2: #332c2a;
+  --line: #3d3532;
+  --line-soft: rgba(255, 255, 255, 0.07);
 
-  /* accent */
-  --accent: #7f95eb;
-  --accent-bright: #97a9f2;
-  --accent-deep: #6676f2;
-  --accent-dim: rgba(127, 149, 235, 0.14);
-  --accent-line: rgba(127, 149, 235, 0.32);
+  --text: #f7f3ef;
+  --text-2: #c2b8b2;
+  --text-3: #8e827c;
 
-  /* semantic */
-  --ok: #69c765;
-  --ok-dim: rgba(105, 199, 101, 0.14);
-  --warn: #f2c14e;
-  --warn-dim: rgba(242, 193, 78, 0.14);
-  --bad: #ff8585;
-  --bad-dim: rgba(255, 133, 133, 0.14);
-  --violet: #a06fe0;
+  /* Brand. One violet, used sparingly, the way DIA uses its single green. */
+  --violet: #7b5cff;
+  --violet-2: #9a82ff;
+  --violet-ink: #1a0f4d;
+  --violet-dim: rgba(123, 92, 255, 0.16);
 
-  /* surfaces */
-  --bg: var(--n-050);
-  --panel: var(--n-100);
-  --panel-2: var(--n-150);
-  --line: var(--n-300);
-  --line-soft: rgba(255, 255, 255, 0.06);
+  /* Semantic fills, keyed to band width. */
+  --mint: #a4e5c1; /* tight band, or an open session */
+  --mint-ink: #123024;
+  --cream: #f6e7d2; /* ordinary band */
+  --cream-ink: #2e2416;
+  --amber: #f2b750; /* wide, size down */
+  --amber-ink: #3a2706;
+  --coral: #ff8f7e; /* very wide, do not settle */
+  --coral-ink: #45150e;
 
-  --text: var(--n-900);
-  --text-dim: var(--n-700);
-  --text-faint: var(--n-600);
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --mono:
-    "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-  --display:
-    "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r: 20px;
+  --r-sm: 12px;
+  --r-xs: 8px;
+  --r-pill: 999px;
 
-  --r-xs: 2px;
-  --r-sm: 4px;
-  --r-md: 6px;
-  --r-lg: 8px;
-
-  --gutter: 16px;
+  --gutter: 20px;
   --maxw: 1240px;
 }
 
-/* The product is a dark terminal by design, but respect an explicit light
-   request rather than fighting the OS. */
 :root[data-theme="light"] {
-  --bg: #f6f6f8;
-  --panel: #ffffff;
-  --panel-2: #f0f0f4;
-  --line: #dcdce4;
-  --line-soft: rgba(0, 0, 0, 0.07);
-  --text: #16161b;
-  --text-dim: #52525f;
-  --text-faint: #75758a;
-  --n-800: #3a3a46;
-  --accent: #4f62d8;
-  --accent-bright: #3a4dc8;
+  --ground: #f4efe9;
+  --ground-2: #ebe4dc;
+  --surface: #ffffff;
+  --surface-2: #f7f2ec;
+  --line: #ddd2c7;
+  --line-soft: rgba(28, 24, 23, 0.08);
+  --text: #1c1817;
+  --text-2: #4e4643;
+  --text-3: #7d716c;
+  --violet: #5a3bef;
+  --violet-2: #4a2fd8;
+  --violet-dim: rgba(90, 59, 239, 0.12);
 }
 
 * {
   box-sizing: border-box;
 }
-
 html,
 body {
   margin: 0;
@@ -92,228 +87,505 @@ body {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--ground);
   color: var(--text);
   font-family: var(--mono);
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "tnum" 1;
-  background-image:
-    radial-gradient(
-      900px 500px at 12% -8%,
-      rgba(127, 149, 235, 0.09),
-      transparent 60%
-    ),
-    radial-gradient(
-      700px 420px at 92% 0%,
-      rgba(160, 111, 224, 0.06),
-      transparent 62%
-    );
-  background-attachment: fixed;
+  /* Grain. Moonshot's ground has a fine noise that keeps a flat dark field from
+     looking like dead pixels. Cheap to draw, does a lot of work. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
 }
+
+/* ========================================================== typography */
 
 h1,
 h2,
 h3,
 h4 {
   font-family: var(--display);
-  font-weight: 800;
-  letter-spacing: -0.02em;
   margin: 0;
-  line-height: 1.15;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.d1 {
+  font-size: clamp(44px, 9vw, 116px);
+  font-weight: 800;
+}
+.d2 {
+  font-size: clamp(32px, 5.4vw, 62px);
+  font-weight: 700;
+}
+.d3 {
+  font-size: clamp(24px, 3.4vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 a {
-  color: var(--accent-bright);
+  color: var(--violet-2);
   text-decoration: none;
 }
 a:hover {
   text-decoration: underline;
 }
-
-code,
-pre {
-  font-family: var(--mono);
+:focus-visible {
+  outline: 2px solid var(--violet-2);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
-/* ---------------------------------------------------------------- layout */
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-weight: 500;
+}
+.lede {
+  font-size: 16px;
+  color: var(--text-2);
+  max-width: 62ch;
+  line-height: 1.65;
+}
+.muted {
+  color: var(--text-3);
+}
+.small {
+  font-size: 12px;
+}
+
+/* =============================================================== chips */
+/* Moonshot sets graphic blocks inline inside the headline. Ours carries an
+   error bar, because that is what this product actually sells. */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+  vertical-align: middle;
+  padding: 0.06em 0.34em;
+  margin: 0 0.12em;
+  line-height: 1;
+}
+.chip-violet {
+  background: var(--violet);
+  color: #fff;
+}
+.chip-mint {
+  background: var(--mint);
+  color: var(--mint-ink);
+}
+.chip-cream {
+  background: var(--cream);
+  color: var(--cream-ink);
+}
+
+.chip-band {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18em;
+  padding: 0.14em 0.42em;
+}
+.chip-band i {
+  display: block;
+  background: currentColor;
+  border-radius: 2px;
+}
+.chip-band .cap {
+  width: 0.09em;
+  height: 0.52em;
+}
+.chip-band .bar {
+  width: 0.7em;
+  height: 0.14em;
+  opacity: 0.55;
+}
+.chip-band .dot {
+  width: 0.17em;
+  height: 0.17em;
+  border-radius: 50%;
+}
+
+/* ============================================================== layout */
 
 .shell {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 0 var(--gutter);
+  padding-inline: var(--gutter);
 }
+main {
+  padding-block: 0 96px;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.stack-lg {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+/* ================================================================= nav */
 
 .nav {
   position: sticky;
-  top: 0;
-  z-index: 50;
-  background: rgba(10, 10, 12, 0.86);
-  backdrop-filter: blur(14px);
+  top: env(safe-area-inset-top, 0px);
+  z-index: 60;
+  background: color-mix(in srgb, var(--ground) 88%, transparent);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--line);
 }
-:root[data-theme="light"] .nav {
-  background: rgba(246, 246, 248, 0.88);
-}
-
-.nav-inner {
+.nav-in {
   display: flex;
   align-items: center;
-  gap: 22px;
-  height: 56px;
+  gap: 8px;
+  height: 64px;
 }
-
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   font-family: var(--display);
   font-weight: 800;
-  letter-spacing: -0.03em;
-  font-size: 16px;
+  font-size: 19px;
+  letter-spacing: -0.045em;
   color: var(--text);
-  white-space: nowrap;
+  margin-right: 14px;
 }
 .brand:hover {
   text-decoration: none;
 }
-
 .brand-mark {
-  width: 22px;
-  height: 22px;
-  border-radius: var(--r-sm);
-  background: linear-gradient(140deg, var(--accent), var(--accent-deep));
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--violet);
   display: grid;
   place-items: center;
-  font-size: 11px;
-  font-weight: 800;
-  color: #0a0a0c;
   flex: none;
 }
-
+/* The mark is an error bar: two caps and a point. Same idea as the headline
+   chip, at favicon scale. */
+.brand-mark i {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    -7px 0 0 -1.5px rgba(255, 255, 255, 0.95),
+    7px 0 0 -1.5px rgba(255, 255, 255, 0.95);
+}
 .nav-links {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   margin-left: auto;
-  align-items: center;
   flex-wrap: wrap;
 }
-
 .nav-link {
-  color: var(--text-dim);
-  padding: 6px 10px;
-  border-radius: var(--r-sm);
-  font-size: 12.5px;
-  letter-spacing: 0.01em;
+  color: var(--text-2);
+  padding: 7px 12px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
 }
 .nav-link:hover {
   color: var(--text);
-  background: var(--n-200);
+  background: var(--surface);
   text-decoration: none;
 }
-.nav-link[data-active="true"] {
-  color: var(--accent-bright);
-  background: var(--accent-dim);
-}
 
-main {
-  padding: 30px 0 80px;
-}
+/* ============================================================= buttons */
 
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
-}
-
-/* ---------------------------------------------------------------- panels */
-
-.panel {
-  background: var(--panel);
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: var(--r-pill);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background 0.12s;
+}
+.btn:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.btn-primary {
+  background: var(--violet);
+  border-color: var(--violet);
+  color: #fff;
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background: var(--violet-2);
+  border-color: var(--violet-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover {
+    transform: none;
+  }
 }
 
-.panel-head {
-  padding: 13px 16px;
-  border-bottom: 1px solid var(--line);
+/* =============================================================== cards */
+
+.card {
+  border-radius: var(--r);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+}
+.card-head {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  margin-bottom: 16px;
 }
-
-.panel-title {
+.card-title {
   font-family: var(--display);
   font-weight: 700;
   font-size: 13px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--text-3);
 }
 
-.panel-body {
-  padding: 16px;
+/* Filled cards. The fill is the meaning, not decoration. */
+.fill-cream {
+  background: var(--cream);
+  border-color: transparent;
+  color: var(--cream-ink);
+}
+.fill-mint {
+  background: var(--mint);
+  border-color: transparent;
+  color: var(--mint-ink);
+}
+.fill-amber {
+  background: var(--amber);
+  border-color: transparent;
+  color: var(--amber-ink);
+}
+.fill-coral {
+  background: var(--coral);
+  border-color: transparent;
+  color: var(--coral-ink);
+}
+.fill-violet {
+  background: var(--violet);
+  border-color: transparent;
+  color: #fff;
+}
+.fill-cream .card-title,
+.fill-mint .card-title,
+.fill-amber .card-title,
+.fill-coral .card-title {
+  color: inherit;
+  opacity: 0.62;
+}
+.fill-violet .card-title {
+  color: #fff;
+  opacity: 0.66;
 }
 
-/* ---------------------------------------------------------------- pieces */
+/* A decorative mark bleeding out of the corner, as Moonshot does. */
+/* A mark bleeding out of the corner, as the reference does. Kept small and
+   faint, and anchored to the corner rather than the middle, so it never sits
+   behind a figure someone has to read. */
+.card-glyph {
+  position: absolute;
+  right: -26px;
+  bottom: -30px;
+  width: 120px;
+  height: 120px;
+  opacity: 0.09;
+  pointer-events: none;
+}
+.fill-violet .card-glyph {
+  opacity: 0.16;
+}
+.card > * {
+  position: relative;
+}
+.card > .card-glyph {
+  position: absolute;
+}
 
-.eyebrow {
+.grid {
+  display: grid;
+  gap: 14px;
+}
+.g2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.g3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.g4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* ================================================= feed cards + bands */
+
+.feed-card {
+  border-radius: var(--r);
+  padding: 22px;
+  min-height: 236px;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.14s ease;
+}
+a.feed-card:hover {
+  text-decoration: none;
+  transform: translateY(-3px);
+}
+@media (prefers-reduced-motion: reduce) {
+  a.feed-card:hover {
+    transform: none;
+  }
+}
+
+.feed-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.feed-sym {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.feed-name {
   font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  font-weight: 500;
+  opacity: 0.62;
+  margin-top: 4px;
 }
+.feed-px {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(30px, 4.4vw, 42px);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.feed-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  opacity: 0.66;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin-top: auto;
+}
+
+/* The interval, drawn to scale. The number sits beside the drawing rather than
+   on top of it: centred over the bar it collided with the mid-line and became
+   unreadable on a filled card. */
+.band-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.band {
+  --pct: 20%;
+  position: relative;
+  flex: 1;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.1);
+}
+.band-fill {
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: calc(50% - var(--pct));
+  width: calc(var(--pct) * 2);
+  background: currentColor;
+  opacity: 0.42;
+  border-radius: 3px;
+}
+.band-edge {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 2.5px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.85;
+}
+.band-mid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: currentColor;
+}
+.band-num {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 62px;
+  text-align: right;
+}
+
+/* ================================================================ tag */
 
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 7px;
-  border-radius: var(--r-xs);
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: var(--r-pill);
   font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  border: 1px solid transparent;
   white-space: nowrap;
+  background: rgba(0, 0, 0, 0.14);
 }
-.tag-ok {
-  color: var(--ok);
-  background: var(--ok-dim);
-  border-color: rgba(105, 199, 101, 0.3);
+.tag-on-dark {
+  background: var(--surface-2);
+  color: var(--text-2);
 }
-.tag-warn {
-  color: var(--warn);
-  background: var(--warn-dim);
-  border-color: rgba(242, 193, 78, 0.3);
-}
-.tag-bad {
-  color: var(--bad);
-  background: var(--bad-dim);
-  border-color: rgba(255, 133, 133, 0.3);
-}
-.tag-mute {
-  color: var(--text-faint);
-  background: var(--n-200);
-  border-color: var(--line);
-}
-.tag-accent {
-  color: var(--accent-bright);
-  background: var(--accent-dim);
-  border-color: var(--accent-line);
-}
-
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: currentColor;
   flex: none;
 }
-.dot-pulse {
+.pulse {
   animation: pulse 2.2s ease-in-out infinite;
 }
 @keyframes pulse {
@@ -322,316 +594,233 @@ main {
     opacity: 1;
   }
   50% {
-    opacity: 0.35;
+    opacity: 0.32;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
   }
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 14px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  background: var(--n-200);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.13s,
-    border-color 0.13s;
-}
-.btn:hover {
-  background: var(--n-300);
-  border-color: var(--n-400);
-  text-decoration: none;
-}
-.btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #0a0a0c;
-  font-weight: 700;
-}
-.btn-primary:hover {
-  background: var(--accent-bright);
-  border-color: var(--accent-bright);
-}
+/* ============================================================== stats */
 
-.grid {
-  display: grid;
-  gap: 14px;
-}
-.grid-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.grid-3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.grid-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.stat {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  padding: 13px 14px;
-}
-.stat-label {
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  margin-bottom: 7px;
-}
-.stat-value {
-  font-size: 21px;
-  font-weight: 700;
+.stat-n {
   font-family: var(--display);
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-.stat-sub {
-  font-size: 11.5px;
-  color: var(--text-faint);
-  margin-top: 4px;
-}
-
-/* ---------------------------------------------------------------- table */
-
-.table-wrap {
-  overflow-x: auto;
-}
-table.feeds {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-  min-width: 860px;
-}
-table.feeds th {
-  text-align: left;
-  padding: 9px 12px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  font-weight: 600;
-  border-bottom: 1px solid var(--line);
-  white-space: nowrap;
-}
-table.feeds td {
-  padding: 11px 12px;
-  border-bottom: 1px solid var(--line-soft);
-  vertical-align: middle;
-}
-table.feeds tr:last-child td {
-  border-bottom: none;
-}
-table.feeds tbody tr {
-  transition: background 0.1s;
-}
-table.feeds tbody tr:hover {
-  background: var(--n-150);
-}
-:root[data-theme="light"] table.feeds tbody tr:hover {
-  background: var(--panel-2);
-}
-.num {
-  text-align: right;
+  font-weight: 800;
+  font-size: clamp(30px, 4.6vw, 46px);
+  letter-spacing: -0.04em;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-
-.ticker-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+.stat-k {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.66;
+  margin-bottom: 12px;
 }
-.ticker-sym {
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.01em;
-}
-.ticker-name {
-  font-size: 10.5px;
-  color: var(--text-faint);
-}
-
-/* confidence bar */
-.band {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: flex-end;
-}
-.band-track {
-  width: 62px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--n-300);
-  overflow: hidden;
-  flex: none;
-}
-.band-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.3s;
-}
-
-/* ---------------------------------------------------------------- code */
-
-pre.code {
-  background: var(--n-000);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  padding: 14px;
-  overflow-x: auto;
+.stat-s {
   font-size: 12px;
-  line-height: 1.6;
-  color: var(--n-800);
-  margin: 0;
-}
-:root[data-theme="light"] pre.code {
-  background: var(--panel-2);
-}
-pre.code .c {
-  color: var(--text-faint);
-}
-pre.code .k {
-  color: var(--accent-bright);
-}
-pre.code .s {
-  color: var(--ok);
-}
-pre.code .n {
-  color: var(--warn);
+  opacity: 0.66;
+  margin-top: 8px;
 }
 
-code.inline {
-  background: var(--n-200);
-  border: 1px solid var(--line);
-  border-radius: var(--r-xs);
-  padding: 1px 5px;
-  font-size: 0.92em;
-  color: var(--accent-bright);
-}
-
-/* ---------------------------------------------------------------- prose */
+/* =============================================================== prose */
 
 .prose {
-  max-width: 76ch;
+  max-width: 74ch;
 }
 .prose h2 {
-  font-size: 22px;
-  margin: 34px 0 10px;
+  font-size: clamp(26px, 3.6vw, 38px);
+  margin: 46px 0 14px;
 }
 .prose h3 {
-  font-size: 15px;
-  margin: 24px 0 8px;
-  font-weight: 700;
+  font-size: 19px;
+  margin: 32px 0 10px;
+  letter-spacing: -0.02em;
 }
 .prose p {
-  color: var(--n-800);
-  margin: 0 0 12px;
+  color: var(--text-2);
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  line-height: 1.7;
 }
 .prose ul,
 .prose ol {
-  color: var(--n-800);
+  color: var(--text-2);
   padding-left: 20px;
-  margin: 0 0 12px;
+  margin: 0 0 14px;
+  font-size: 14.5px;
 }
 .prose li {
-  margin-bottom: 5px;
+  margin-bottom: 7px;
 }
-.prose table {
+.prose strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.tbl {
+  overflow-x: auto;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  margin: 20px 0;
+}
+table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12.5px;
-  margin: 14px 0;
+  min-width: 520px;
 }
-.prose th,
-.prose td {
-  text-align: left;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--line);
-}
-.prose th {
-  color: var(--text-faint);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
+th {
+  text-align: right;
+  padding: 11px 13px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--text-3);
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  background: var(--ground-2);
+}
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+td {
+  text-align: right;
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--line-soft);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+tbody tr:last-child td {
+  border-bottom: none;
+}
+tbody tr:hover td {
+  background: var(--ground-2);
+}
+td.sym {
+  color: var(--text);
+  font-weight: 700;
+}
+.ok {
+  color: var(--mint);
+}
+.warn {
+  color: var(--amber);
+}
+.bad {
+  color: var(--coral);
 }
 
-.callout {
-  border-left: 2px solid var(--accent);
-  background: var(--accent-dim);
-  padding: 12px 14px;
-  border-radius: 0 var(--r-sm) var(--r-sm) 0;
-  margin: 16px 0;
-  font-size: 12.5px;
-  color: var(--n-800);
+pre {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.7;
+  background: #141110;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 18px;
+  overflow-x: auto;
+  margin: 18px 0;
+  color: var(--text-2);
 }
-.callout-warn {
-  border-left-color: var(--warn);
-  background: var(--warn-dim);
+:root[data-theme="light"] pre {
+  background: var(--ground-2);
+}
+pre .c {
+  color: var(--text-3);
+}
+pre .g {
+  color: var(--mint);
+}
+pre .v {
+  color: var(--violet-2);
+}
+code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 6px;
+  color: var(--violet-2);
+}
+.fill-cream code,
+.fill-mint code,
+.fill-amber code {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.14);
+  color: inherit;
+}
+
+.note {
+  border-radius: var(--r-sm);
+  padding: 16px 18px;
+  margin: 20px 0;
+  font-size: 14px;
+  background: var(--violet-dim);
+  border-left: 3px solid var(--violet);
+  color: var(--text-2);
+}
+.note strong {
+  color: var(--text);
+}
+.note-warn {
+  background: rgba(242, 183, 80, 0.13);
+  border-left-color: var(--amber);
 }
 
 hr.rule {
   border: none;
   border-top: 1px solid var(--line);
-  margin: 26px 0;
+  margin: 34px 0;
 }
 
-.muted {
-  color: var(--text-faint);
-}
-.small {
-  font-size: 11.5px;
-}
-.mono-lg {
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
+/* ============================================================== footer */
 
 .footer {
   border-top: 1px solid var(--line);
-  margin-top: 60px;
-  padding: 26px 0 40px;
-  color: var(--text-faint);
-  font-size: 11.5px;
+  margin-top: 80px;
+  padding-block: 32px 52px;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.8;
 }
 
-/* ---------------------------------------------------------------- resp. */
+/* ========================================================== responsive */
 
-@media (max-width: 900px) {
-  .grid-4 {
+@media (max-width: 980px) {
+  .g4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .grid-3 {
+  .g3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
-@media (max-width: 640px) {
-  .grid-4,
-  .grid-3,
-  .grid-2 {
+@media (max-width: 620px) {
+  .g4,
+  .g3,
+  .g2 {
     grid-template-columns: minmax(0, 1fr);
   }
-  .nav-inner {
+  .nav-in {
     height: auto;
-    padding: 10px 0;
-    align-items: flex-start;
+    padding-block: 12px;
     flex-direction: column;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 10px;
   }
   .nav-links {
     margin-left: 0;
   }
-  .mono-lg {
-    font-size: 24px;
+  main {
+    padding-bottom: 64px;
+  }
+  .stack-lg {
+    gap: 42px;
   }
 }

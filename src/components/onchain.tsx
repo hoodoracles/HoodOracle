@@ -1,6 +1,8 @@
 "use client";
 
-/** Live deployment banner. Renders nothing when no contract is configured. */
+import { Glyph, Tag } from "./ui";
+
+/** Live deployment panel. Renders nothing when no contract is configured. */
 export function OnChainPanel() {
   const address = process.env.NEXT_PUBLIC_ORACLE_ADDRESS;
   const chain = process.env.NEXT_PUBLIC_ORACLE_CHAIN;
@@ -10,56 +12,53 @@ export function OnChainPanel() {
   if (!address) return null;
 
   return (
-    <section className="panel">
-      <div className="panel-head">
-        <span className="panel-title">Live on-chain</span>
-        <span className="tag tag-ok">
-          <span className="dot dot-pulse" />
+    <section>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: 14,
+          flexWrap: "wrap",
+          marginBottom: 18,
+        }}
+      >
+        <h2 className="d2">Live on-chain</h2>
+        <Tag live onDark>
           deployed
-        </span>
-        <span className="muted small" style={{ marginLeft: "auto" }}>
-          quotes posted from this service
-        </span>
+        </Tag>
       </div>
-      <div className="panel-body">
-        <div className="grid grid-2">
-          <div>
-            <div className="stat-label">Contract</div>
-            <div
-              style={{
-                fontSize: 12.5,
-                wordBreak: "break-all",
-                color: "var(--accent-bright)",
-              }}
-            >
-              {address}
-            </div>
+
+      <div className="grid g2">
+        <div className="card fill-mint">
+          <Glyph kind="bolt" />
+          <div className="stat-k">Contract</div>
+          <div
+            style={{
+              fontSize: 13,
+              wordBreak: "break-all",
+              fontWeight: 600,
+              lineHeight: 1.5,
+            }}
+          >
+            {address}
           </div>
-          <div>
-            <div className="stat-label">Network</div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>
-              {chain}
-              {chainId ? (
-                <span className="muted small"> · chainId {chainId}</span>
-              ) : null}
-            </div>
+          <div className="stat-s">
+            {chain}
+            {chainId ? ` · chainId ${chainId}` : ""}
           </div>
         </div>
-        <pre className="code" style={{ marginTop: 12 }}>
-          <span className="c"># read the live quote straight from the chain</span>
-          {"\n"}cast call {address} \{"\n"}
-          {"  "}&quot;getQuote(string)((uint128,uint64,uint8,uint8,uint8,uint64,uint64,uint64))&quot;
-          \{"\n"}
-          {"  "}&quot;HOOD&quot; --rpc-url {rpc}
-          {"\n\n"}
-          <span className="c">
-            # a liquidation path reverts while the tape is shut
-          </span>
-          {"\n"}cast call {address} \{"\n"}
-          {"  "}&quot;getPriceIfTraded(string,uint64)(uint128)&quot; &quot;HOOD&quot; 50 --rpc-url {rpc}
-          {"\n"}
-          <span className="c"># → execution reverted: not a live print</span>
-        </pre>
+
+        <div className="card">
+          <div className="stat-k">Verify it yourself</div>
+          <pre style={{ margin: 0, fontSize: 11 }}>
+            <span className="c"># a liquidation path, tape shut</span>
+            {"\n"}cast call {address.slice(0, 10)}… \{"\n"}
+            {"  "}&quot;getPriceIfTraded(string,uint64)&quot; \{"\n"}
+            {"  "}&quot;HOOD&quot; 50 --rpc-url {rpc ? new URL(rpc).host : ""}
+            {"\n"}
+            <span className="g">→ reverted: not a live print</span>
+          </pre>
+        </div>
       </div>
     </section>
   );

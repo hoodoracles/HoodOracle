@@ -25,9 +25,9 @@ const CHECKS: Check[] = [
   {
     path: "/",
     name: "dashboard",
-    expect: ["hoodoracle", "HOOD", "Confidence", "Provenance", "DERIVED"],
+    expect: ["hoodoracle", "HOOD", "DERIVED", "error bar", "coverage"],
     // Wait for a real ticker row, not the loading placeholder.
-    waitFor: "table.feeds tbody .ticker-sym",
+    waitFor: ".feed-card .feed-sym",
     full: true,
   },
   { path: "/why", name: "why", expect: ["dark", "session"], full: true },
@@ -36,7 +36,7 @@ const CHECKS: Check[] = [
     path: "/playground",
     name: "playground",
     expect: ["HOOD", "confidenceBps"],
-    waitFor: ".stat-value",
+    waitFor: ".stat-n",
     full: true,
   },
   { path: "/integrate", name: "integrate", expect: ["Solidity"], full: true },
@@ -44,7 +44,7 @@ const CHECKS: Check[] = [
     path: "/feed/HOOD",
     name: "feed-hood",
     expect: ["HOOD", "Robinhood", "Published price"],
-    waitFor: ".mono-lg",
+    waitFor: ".stat-n",
     full: true,
   },
 ];
