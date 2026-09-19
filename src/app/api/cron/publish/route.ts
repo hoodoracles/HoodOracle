@@ -335,6 +335,16 @@ async function handle(req: Request) {
       failed,
       quoteErrors: errors,
     },
-    { headers: { "cache-control": "no-store" } },
+    {
+      // A run where every send threw used to answer 200, so a scheduler logged
+      // it as "Successful" and nobody found out until someone read the chain.
+      // The status has to carry the outcome, because the status is the only
+      // part of this a scheduler looks at.
+      //
+      // Skipping everything is still 200: that is the materiality filter doing
+      // its job, not a fault.
+      status: failed.length > 0 ? 502 : 200,
+      headers: { "cache-control": "no-store" },
+    },
   );
 }

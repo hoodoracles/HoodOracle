@@ -425,6 +425,18 @@ Every call spends gas, so it is deliberately stingy:
   receipt waits outlive a serverless invocation, and the receipt says nothing
   the next run cannot read back.
 
+Status codes, because a scheduler reads the status and nothing else:
+
+| Code | Meaning |
+|---|---|
+| `200` | Posted, or skipped everything on the materiality thresholds. Both fine. |
+| `401` | Credential missing or wrong. Body names which fields arrived. |
+| `502` | At least one send failed. The body's `failed[]` says which and why. |
+| `503` | Missing configuration. Body lists the variables. |
+
+A run where every send threw used to answer `200`, so a scheduler logged it as
+successful and the failure surfaced only when somebody read the chain.
+
 Extra environment for the relayer:
 
 | Variable | Required | Notes |
