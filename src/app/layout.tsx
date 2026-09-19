@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   // Relative image paths in the metadata below resolve against this, so
   // without it a shared link renders with no preview card at all.
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://hoodoracle-neon.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.hoodoracle.org",
   ),
   title: TITLE,
   description: DESCRIPTION,

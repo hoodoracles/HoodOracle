@@ -8,7 +8,7 @@ import type { MetadataRoute } from "next";
  */
 export default function robots(): MetadataRoute.Robots {
   const base =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://hoodoracle-neon.vercel.app";
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.hoodoracle.org";
   return {
     rules: { userAgent: "*", allow: "/", disallow: "/api/cron/" },
     sitemap: `${base}/sitemap.xml`,

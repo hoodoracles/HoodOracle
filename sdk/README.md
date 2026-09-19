@@ -50,7 +50,7 @@ two by accident.
 
 The band is not a guess. It is fitted on two years of realised close-to-open
 gaps and validated by a coverage test; the live score is published at
-[/coverage](https://hoodoracle-neon.vercel.app/coverage).
+[/coverage](https://www.hoodoracle.org/coverage).
 
 ## Three things you can now write
 
@@ -226,7 +226,7 @@ comparison.
 
 The contract is **unaudited**. The default upstream is not licensed for
 commercial redistribution. There is one signer and one relayer, so there is no
-redundancy yet. Read [/docs](https://hoodoracle-neon.vercel.app/docs) before
+redundancy yet. Read [/docs](https://www.hoodoracle.org/docs) before
 putting real money behind it.
 
 ISC.

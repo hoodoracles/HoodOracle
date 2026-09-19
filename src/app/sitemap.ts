@@ -4,7 +4,7 @@ import { UNIVERSE } from "@/lib/universe";
 /** Served at /sitemap.xml. Static pages plus one entry per tracked feed. */
 export default function sitemap(): MetadataRoute.Sitemap {
   const base =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://hoodoracle-neon.vercel.app";
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.hoodoracle.org";
   const now = new Date();
 
   const pages = [

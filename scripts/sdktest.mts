@@ -330,7 +330,7 @@ if (OFFLINE) {
   // --------------------------------------------------- the signed API path
 
   console.log("\n=== E. against the live API ===\n");
-  const base = process.env.SDK_TEST_API ?? "https://hoodoracle-neon.vercel.app";
+  const base = process.env.SDK_TEST_API ?? "https://www.hoodoracle.org";
   console.log(`  base ${base}`);
 
   try {

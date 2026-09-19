@@ -37,7 +37,7 @@ export const HOOD_ORACLE_KEEPER_ADDRESS =
   "0xc984336bf8f5218c601bbb1a83a070262b694aee" as const;
 
 /** Where signed quotes are served from. */
-export const DEFAULT_API_URL = "https://hoodoracle-neon.vercel.app" as const;
+export const DEFAULT_API_URL = "https://www.hoodoracle.org" as const;
 
 /** The instruments currently priced. */
 export const TICKERS = [

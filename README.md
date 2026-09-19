@@ -1,13 +1,35 @@
-# hoodoracle
+<div align="center">
 
-Session-aware price feeds for tokenised equities. **Live on Robinhood Chain
-mainnet.**
+<img src="./brand/exports/twitter-header.png" alt="hoodoracle" width="820">
 
-```
-oracle    0x65cf45524407a5e700188a8a8178d5d5c0c38d30
-keeper    0xc984336bf8f5218c601bbb1a83a070262b694aee
-chain     Robinhood Chain (4663)
-```
+### Session-aware price feeds for tokenised equities
+
+**The price, where it came from, and how much to trust it — right now.**
+
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](./LICENSE)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.29-363636.svg)](https://soliditylang.org/)
+[![Chain](https://img.shields.io/badge/Robinhood%20Chain-4663-1b3f60.svg)](https://explorer.mainnet.chain.robinhood.com)
+[![Band coverage](https://img.shields.io/badge/band%20coverage-94.9%25%20over%203%2C990%20gaps-1a6b4a.svg)](#the-track-record)
+[![Tests](https://img.shields.io/badge/tests-16%20solidity%20%C2%B7%20160%20checks-1a6b4a.svg)](#tests)
+
+**[Live feeds](https://www.hoodoracle.org)** · **[Track record](https://www.hoodoracle.org/coverage)** · **[Docs](https://www.hoodoracle.org/docs)** · **[Integrate](https://www.hoodoracle.org/integrate)** · **[Playground](https://www.hoodoracle.org/playground)**
+
+</div>
+
+---
+
+## Live on Robinhood Chain mainnet
+
+| Contract | Address | What it does |
+|---|---|---|
+| **HoodOracle** | [`0x65cf45524407a5e700188a8a8178d5d5c0c38d30`](https://explorer.mainnet.chain.robinhood.com/address/0x65cf45524407a5e700188a8a8178d5d5c0c38d30) | Verifies signed quotes; session-aware read interface |
+| **HoodOracleKeeper** | [`0xc984336bf8f5218c601bbb1a83a070262b694aee`](https://explorer.mainnet.chain.robinhood.com/address/0xc984336bf8f5218c601bbb1a83a070262b694aee) | Batch relaying and on-chain staleness discovery |
+
+**Chain** Robinhood Chain (4663), an Arbitrum Orbit L2 · **Signer** `0xA139E54E6c88420cb5546c64130d1Ba145Ff9C8A` · **Status** evaluation build, contracts unaudited
+
+---
+
+## What is hoodoracle?
 
 Robinhood Chain went live on 1 July 2026 as an Arbitrum Orbit L2 and trades
 tokenised US equities around the clock, with DeFi lending on top. The shares
@@ -18,6 +40,20 @@ lent against or liquidated in every hour of it.
 Every other oracle returns one number and hides which regime it came from.
 hoodoracle returns the number together with how it was obtained and how much to
 trust it right now.
+
+### What it does that other equity oracles do not
+
+| | |
+|---|---|
+| **Provenance on every quote** | `TRADED`, `DERIVED` or `STALE`. You always know whether a price is an observed print or a model output, and `getPriceIfTraded` reverts rather than hand a liquidation path a modelled weekend price. |
+| **A calibrated confidence band** | Fitted on 3,990 realised close-to-open gaps across 8 instruments, not a hand-picked constant. 94.9% of historical gaps landed inside it. |
+| **A published track record** | Every band published is scored against the print that settled it, computed from the chain's own event log with no database in between. Anyone can recompute it. |
+| **Session awareness** | `REGULAR`, `PRE`, `POST`, `CLOSED`, `HOLIDAY`, from a real NYSE calendar with DST, holidays and early closes. |
+| **Pull, not push** | Quotes are signed off-chain and posted on demand. A weekend price does not change for 62 hours, so publishing it on a heartbeat would be paying gas to say nothing. |
+| **Permissionless relaying** | The contract authenticates the signature, not the sender. Anyone may post a fresher quote, and anyone may run a keeper. |
+| **No single upstream** | Providers are pluggable; the consensus price is the median, so one bad feed cannot drag it, and their real disagreement widens the band. |
+
+---
 
 ## Sourcing
 
@@ -647,19 +683,59 @@ Extra environment for the relayer:
 | `CRON_BAND_MOVE_BPS` | no | Default 15. |
 | `CRON_MAX_ONCHAIN_AGE` | no | Default 10800 (3h). |
 
-## Layout
+## Repository structure
 
 ```
-contracts/HoodOracle.sol     verifier + session-aware read interface
-contracts/HoodOracleKeeper.sol  batch relay + staleness discovery
-test/HoodOracleKeeper.t.sol     forge tests, no external dependencies
-src/lib/session.ts           NYSE calendar, DST, holidays, early closes
-src/lib/quote.ts             the engine: provenance, drift, confidence
-src/lib/sign.ts              digest + EIP-191 signing
-src/lib/ledger.ts            the track record, rebuilt from chain logs
-src/app/api/                 quote, quotes, health, coverage, cron
-sdk/                         @hoodoracle/sdk — typed client, policy, hooks
-scripts/                     unit, weekend, browser, on-chain, ledger, sdk tests
+hoodoracle/
+│
+├── contracts/
+│   ├── HoodOracle.sol              Signature verifier, session-aware read interface
+│   └── HoodOracleKeeper.sol        Batch relaying, on-chain staleness discovery
+│
+├── test/
+│   └── HoodOracleKeeper.t.sol      16 forge tests, zero external dependencies
+│
+├── src/
+│   ├── lib/
+│   │   ├── session.ts              NYSE calendar: DST, holidays, early closes
+│   │   ├── quote.ts                The engine: provenance, drift, confidence
+│   │   ├── calibration.ts          Fitted betas and sigmas, and the time exponent
+│   │   ├── sign.ts                 EIP-191 digest and signing
+│   │   ├── ledger.ts               The track record, rebuilt from chain logs
+│   │   ├── providers/              Pluggable upstreams, median consensus
+│   │   └── universe.ts             The eight instruments
+│   │
+│   ├── app/
+│   │   ├── api/quote/[ticker]      One signed quote, with digest and signer
+│   │   ├── api/quotes              The whole board, one proxy snapshot
+│   │   ├── api/coverage            The published track record, scored
+│   │   ├── api/health              Upstream, signer, relayer, keeper
+│   │   ├── api/cron/publish        The relayer: materiality filter, batching
+│   │   ├── coverage/               "Was the band right?"
+│   │   ├── why/  docs/  integrate/  playground/  feed/[ticker]/
+│   │   └── layout.tsx              Nav, metadata, link previews
+│   │
+│   └── components/                 Band drawing, stats, tags
+│
+├── sdk/                            @hoodoracle/sdk
+│   └── src/
+│       ├── client.ts               HoodOracle: typed on-chain reads
+│       ├── keeper.ts               HoodOracleKeeper: batch + discovery
+│       ├── band.ts                 Integer band maths and the policy layer
+│       ├── verify.ts               Offline signature verification
+│       ├── react.ts                useQuote, useOnChainQuote
+│       └── types.ts                Session, Provenance, the quote shapes
+│
+├── scripts/
+│   ├── calibrate.mts               Refit betas and bands from 2y of gaps
+│   ├── deploy.mts / deploy-keeper.mts
+│   ├── ledger.mts                  Print the on-chain track record
+│   ├── smoke / weekend / providers / browse / onchain
+│   ├── ledgertest / sdktest / keepertest
+│   ├── fixture-rpc.mts             A synthetic chain, for resolved-state tests
+│   └── brand.mts / ico.mts         Generate every brand asset
+│
+└── brand/                          Mark, banners, icons — all generated
 ```
 
 ## Limits
