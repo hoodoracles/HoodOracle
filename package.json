@@ -20,7 +20,9 @@
     "ledger": "tsx scripts/ledger.mts",
     "test:ledger": "tsx scripts/ledgertest.mts",
     "deploy:keeper": "tsx scripts/deploy-keeper.mts",
-    "test:keeper": "tsx scripts/keepertest.mts"
+    "test:keeper": "tsx scripts/keepertest.mts",
+    "test:sdk": "tsx scripts/sdktest.mts",
+    "sdk:build": "npm --prefix sdk run build"
   },
   "license": "ISC",
   "private": true,

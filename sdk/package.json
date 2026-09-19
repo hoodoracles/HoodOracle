@@ -1,0 +1,52 @@
+{
+  "name": "@hoodoracle/sdk",
+  "version": "0.1.0",
+  "description": "Session-aware price feeds for tokenised equities on Robinhood Chain. Price, provenance and a calibrated confidence band.",
+  "license": "ISC",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./react": {
+      "types": "./dist/esm/react.d.ts",
+      "import": "./dist/esm/react.js",
+      "require": "./dist/cjs/react.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node ./fixup.mjs",
+    "typecheck": "tsc -p tsconfig.esm.json --noEmit"
+  },
+  "keywords": [
+    "oracle",
+    "robinhood-chain",
+    "tokenised-equities",
+    "rwa",
+    "price-feed",
+    "confidence-interval",
+    "defi",
+    "viem"
+  ],
+  "peerDependencies": {
+    "react": ">=18",
+    "viem": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2",
+    "viem": "^2.56.8"
+  },
+  "engines": { "node": ">=18" }
+}

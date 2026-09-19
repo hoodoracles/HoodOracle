@@ -17,7 +17,43 @@ export default function Integrate() {
         Arbitrum unchanged.
       </p>
 
-      <h2>1 · Read the consumer interface</h2>
+      <h2>1 · From TypeScript, use the SDK</h2>
+
+      <p>
+        The enum ordering, the digest encoding and the band arithmetic all have
+        to match the contract exactly, and all three are easy to get subtly
+        wrong by hand. <code>@hoodoracle/sdk</code> ships them, and defaults to
+        refusing a price that is not an observed print.
+      </p>
+
+      <pre>{`npm install @hoodoracle/sdk viem`}</pre>
+
+      <pre>{`import { HoodOracle, QuoteRejected } from "@hoodoracle/sdk";
+
+const oracle = new HoodOracle();   `}<span className="c">{`// mainnet, no config needed`}</span>{`
+
+try {
+  `}<span className="c">{`// Throws unless this is a live print inside 150bps.`}</span>{`
+  const price = await oracle.price("HOOD", { maxBps: 150 });
+  liquidate(position, price);
+} catch (e) {
+  `}<span className="c">{`// On a Saturday: "provenance is DERIVED: the tape was shut and`}</span>{`
+  `}<span className="c">{`// this price is a model output, not an observed print"`}</span>{`
+  if (e instanceof QuoteRejected) return;
+  throw e;
+}
+
+`}<span className="c">{`// Value collateral at the pessimistic edge, debt at the other.`}</span>{`
+const floor = await oracle.conservativePrice("HOOD", "collateral");`}</pre>
+
+      <p className="small muted">
+        React bindings at <code>@hoodoracle/sdk/react</code>. Prices are{" "}
+        <code>bigint</code> at 8 decimals throughout, because the band
+        comparison has to be exact — see the SDK readme for why floats change
+        answers here.
+      </p>
+
+      <h2>2 · Read the consumer interface</h2>
 
       <p>
         The function a liquidation path should call is{" "}
@@ -44,7 +80,7 @@ export default function Integrate() {
     function isLive(string calldata t, uint64 maxBps) external view returns (bool);
 }`}</pre>
 
-      <h2>2 · Write policy that was previously impossible</h2>
+      <h2>3 · Write policy that was previously impossible</h2>
 
       <pre>{`contract LendingMarket {
     IHoodOracle public oracle;
@@ -73,7 +109,15 @@ export default function Integrate() {
     }
 }`}</pre>
 
-      <h2>3 · Relay a quote on-chain</h2>
+      <h2>4 · Relay a quote on-chain</h2>
+
+      <p>
+        The on-chain value is only as current as the last relay, and anyone may
+        post. From the SDK that is{" "}
+        <code>oracle.postQuote(wallet, signed)</code>; by hand it is the tuple
+        below, which has to be packed in exactly this field order or the
+        signature will not recover.
+      </p>
 
       <pre>{`import { createWalletClient, http } from "viem";
 import { arbitrumSepolia } from "viem/chains";
@@ -99,6 +143,57 @@ await wallet.writeContract({
     r.signature,
   ],
 });`}</pre>
+
+      <h2>5 · Batch, and find out what is stale</h2>
+
+      <p>
+        <code>HoodOracleKeeper</code> sits beside the oracle. It mints no
+        authority — every quote it forwards is still checked against the
+        oracle&apos;s own signer allow-list, and it holds no funds and has no
+        owner — so anything done through it could have been done without it,
+        just in more transactions.
+      </p>
+
+      <pre>{`keeper  0xc984336bf8f5218c601bbb1a83a070262b694aee`}</pre>
+
+      <pre>{`interface IHoodOracleKeeper {
+    `}<span className="c">{`// Posts several quotes in one transaction. A quote the oracle`}</span>{`
+    `}<span className="c">{`// refuses is reported false, not thrown, so one raced ticker`}</span>{`
+    `}<span className="c">{`// cannot discard the rest of the batch.`}</span>{`
+    function postQuotes(string[] calldata tickers, Quote[] calldata qs, bytes[] calldata sigs)
+        external returns (bool[] memory posted);
+
+    `}<span className="c">{`// Free. maxAge = 0 uses the oracle's own maxQuoteAge.`}</span>{`
+    function needsUpdate(string[] calldata t, uint64 maxAge) external view returns (bool[] memory);
+    function status(string[] calldata t, uint64 maxAge) external view returns (Status[] memory);
+}`}</pre>
+
+      <p>
+        Batching saves about 21% of the gas, but the reason to use it is that
+        all eight quotes land in <strong>one block</strong>. Posted separately
+        they land across eight, so a consumer reading mid-round gets a snapshot
+        that never existed: HOOD from one block and TLT from forty later, when
+        both were priced against a single proxy reading.
+      </p>
+
+      <p>
+        <code>needsUpdate</code> matters for a different reason. Which tickers
+        are stale used to be known only to the scheduler posting them, behind a
+        shared secret — one cron job as a single point of failure for a feed
+        anyone is allowed to write to. Now anyone can run a keeper.
+      </p>
+
+      <pre>{`import { HoodOracleKeeper } from "@hoodoracle/sdk";
+
+const keeper = new HoodOracleKeeper({ address: KEEPER });
+
+`}<span className="c">{`// What should be posted again? Free to ask, no permission needed.`}</span>{`
+const stale = await keeper.needsUpdate(["HOOD", "COIN", "TLT"]);
+
+`}<span className="c">{`// Check what the chain would accept before paying for it.`}</span>{`
+const willLand = await keeper.simulate(signedQuotes, account);
+
+await keeper.postQuotes(wallet, signedQuotes);`}</pre>
 
       <h2>Guards the contract enforces</h2>
 

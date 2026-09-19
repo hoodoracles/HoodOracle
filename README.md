@@ -4,7 +4,8 @@ Session-aware price feeds for tokenised equities. **Live on Robinhood Chain
 mainnet.**
 
 ```
-contract  0x65cf45524407a5e700188a8a8178d5d5c0c38d30
+oracle    0x65cf45524407a5e700188a8a8178d5d5c0c38d30
+keeper    0xc984336bf8f5218c601bbb1a83a070262b694aee
 chain     Robinhood Chain (4663)
 ```
 
@@ -87,6 +88,7 @@ A consumer contract reads `provenance` before it reads `price`.
 | `GET /api/quotes` | Every instrument, priced against one proxy snapshot |
 | `GET /api/quote/:ticker` | One instrument, signed, with digest and signer |
 | `GET /api/health` | Upstream reachability, signer, session. 503 when upstream is down |
+| `GET /api/coverage` | The published track record, scored from chain logs |
 
 ## Pages
 
@@ -96,7 +98,8 @@ A consumer contract reads `provenance` before it reads `price`.
 | `/why` | The problem, the weekly calendar, the model |
 | `/docs` | Field semantics, confidence model, signature verification |
 | `/playground` | Live API calls against the running service |
-| `/integrate` | Solidity interface and consumer policy examples |
+| `/coverage` | Every band we published, scored against the print that settled it |
+| `/integrate` | SDK, Solidity interface and consumer policy examples |
 | `/feed/:ticker` | Per-instrument detail with the signed payload |
 
 ## The confidence model
@@ -166,6 +169,198 @@ stopped accumulating past 24 hours. Measuring the actual window removes both
 fudges. Where the series does not reach back far enough, drift is zero rather
 than extrapolated.
 
+## The keeper
+
+`HoodOracleKeeper` sits beside the oracle and does two things the oracle
+deliberately does not.
+
+```
+keeper  0xc984336bf8f5218c601bbb1a83a070262b694aee
+```
+
+It mints no authority. Every quote it forwards is still checked against the
+oracle's own signer allow-list, it holds no funds, has no owner and stores
+nothing — so anything done through it could have been done without it, just in
+more transactions. That is why it is a separate contract rather than a new
+version of the oracle: adding these functions to `HoodOracle` would have minted
+a new address, orphaned every integrator, forced the signer to be
+re-allow-listed, and reset the published coverage archive. None of that buys
+anything a caller can observe.
+
+### Batch posting
+
+```solidity
+function postQuotes(string[] tickers, Quote[] quotes, bytes[] signatures)
+    external returns (bool[] posted);
+```
+
+Measured on a real EVM with eight live quotes:
+
+```
+one-at-a-time  704,596 gas across 8 transactions
+batched        556,345 gas in 1 transaction
+saved          148,251 gas  (21.0%)
+```
+
+The gas is the smaller half. The real win is that **all eight land in one
+block**. Posted separately they land across eight, so a consumer reading
+mid-round gets a snapshot that never existed — HOOD from one block and TLT
+from forty later, when the two were priced against a single proxy reading.
+
+**A failed quote is recorded, not thrown.** The oracle rejects anything not
+strictly newer than what it stores, and anyone may relay, so two relayers
+racing on one ticker is an ordinary event. If the loop bubbled that revert, one
+already-posted ticker would discard the other seven and burn the gas anyway.
+
+The relayer **simulates before sending**. `postQuotes` reports per-quote
+success in its return value and nothing observes that without waiting for a
+receipt, which this endpoint deliberately does not do. An `eth_call` is free
+and answers the same question first, so a forged or stale quote is caught
+before it is paid for.
+
+Batching is used only from two quotes upwards — a batch of one pays the
+helper's call overhead to save nothing — and the relayer falls back to
+one-at-a-time if the keeper is unset or unreachable. A keeper misconfiguration
+cannot stop the feed.
+
+### Keeper discovery
+
+```solidity
+function needsUpdate(string[] tickers, uint64 maxAge) view returns (bool[]);
+function status(string[] tickers, uint64 maxAge) view returns (Status[]);
+```
+
+Which tickers are stale was previously known only to the scheduler posting
+them, behind a shared secret. That made one cron job a single point of failure
+for a feed **anyone is allowed to write to** — and it froze production once
+already. Both functions are `view`, so asking costs nothing and needs no
+permission.
+
+`status` exists because eight separate `getQuote` calls are eight network round
+trips that can interleave with a post, so a keeper built on them can act on a
+view of the feed that never existed at any instant. One call is one block.
+
+A ticker that was never posted reverts inside the oracle; both functions catch
+that and report it as needing an update, which is what it needs. One unknown
+symbol in the array does not blind a keeper to the other seven.
+
+```bash
+npm run deploy:keeper -- rh-mainnet   # DEPLOYER_KEY + DEPLOY_CONFIRM=yes
+```
+
+## The track record
+
+The confidence model is validated by a backtest. A backtest is evidence about
+the past; it is not evidence that the thing running in production is still
+right. So every band the contract has accepted is scored against the print
+that settled it.
+
+```bash
+npm run ledger          # or GET /api/coverage, or visit /coverage
+```
+
+**The archive is the chain.** There is no database. The contract keeps only
+the latest quote per ticker in storage, but every quote it ever accepted
+survives as a `QuotePosted` log signed by an allow-listed key. So the record
+cannot be edited after the fact, does not depend on any service of ours
+staying up, and anyone can recompute the numbers from Robinhood Chain without
+asking us for anything. A Postgres mirror would be faster and strictly less
+trustworthy.
+
+### How a band is scored
+
+A quote whose provenance is not `TRADED` is a claim about a price nobody can
+observe yet. The first `TRADED` quote that follows it, for the same ticker, is
+the observation that settles the claim.
+
+- **At reopen** — the headline. One score per closure, using the last band
+  published before the tape reopened. The fitted sigma is anchored on a
+  *complete* close-to-open gap, so the band only claims to cover the whole gap
+  once the whole gap has elapsed. This is the only apples-to-apples comparison
+  with the backtest.
+- **All during closure** — every band published during the same closure,
+  against the same print. Reads lower by construction, because the band widens
+  with elapsed staleness: a quote published an hour into a 62-hour weekend
+  carries an overnight-sized band against a weekend-sized move. Reported
+  anyway, because a consumer reading the feed on Saturday morning gets that
+  quote, not the Monday one.
+- **Not scored** — consecutive live prints. A `TRADED` band is source
+  dispersion around a price that already exists, not a forecast, so testing
+  the next print against it would test a claim the oracle never made.
+
+Band edges are computed as `(price * confidenceBps) / 10000` over integers,
+matching `getBandedPrice` exactly. Doing it in floating point is not merely
+imprecise: `100 * (1 + 50/10_000)` is `100.49999999999999`, so a print landing
+exactly on a ±0.50% edge scores as a miss. Boundary cases are rare but they
+are not random — they cluster where the band is doing its job — so dropping
+them biases coverage downward.
+
+Intervals are Wilson score at 95%. With a handful of samples a bare percentage
+invites reading "3 of 3" and "3,790 of 3,992" as the same statement.
+
+### It knows when the model changed
+
+`npm run calibrate` rewrites the betas and sigmas, and quotes published before
+that moment were banded by a different model. The archive has already
+straddled one such change: the first HOOD quote on chain carries 162bps and
+the next, eighty minutes later, carries 376bps at barely more staleness.
+Nothing about the market did that.
+
+So the ledger reports both — `atReopen` over the whole record, which is what
+consumers were actually handed and is not ours to retouch, and
+`sinceCalibration`, which asks whether the model running *now* is calibrated.
+Publishing only the first is uninformative; publishing only the second is
+marking your own homework by discarding the quotes you have since decided you
+dislike.
+
+### Proving the scorer is right
+
+`npm run test:ledger` replays two years of real closes and opens for the whole
+universe through the same `buildLedger()` the site calls, and checks it
+reproduces the calibration's own figure:
+
+```
+replayed 7984 quotes -> 3992 resolved gaps
+coverage  94.96%  (3791/3992)  CI [94.24 - 95.60]  mean |err|/band 0.352
+
+  AAPL   96.4%  481/499   calibration.json says 96.4%
+  COIN   94.6%  472/499   calibration.json says 93.4%
+  HOOD   93.6%  467/499   calibration.json says 93.8%
+  ...
+```
+
+## The SDK
+
+`sdk/` is `@hoodoracle/sdk`: the enums, the digest encoder, the band
+arithmetic and a policy layer, so an integrator does not re-derive any of them
+from a docs page and get one subtly wrong.
+
+```ts
+import { HoodOracle } from "@hoodoracle/sdk";
+
+const oracle = new HoodOracle();        // mainnet, no config
+const price = await oracle.price("HOOD");  // throws unless TRADED
+```
+
+Refusing by default is the point. On a Saturday that call throws
+`QuoteRejected: provenance is DERIVED: the tape was shut and this price is a
+model output, not an observed print`.
+
+```bash
+npm run sdk:build       # dual ESM + CJS via tsc, no bundler
+npm run test:sdk        # agreement with the server and the deployed contract
+```
+
+The SDK carries its own copy of the tuple so that installing it does not drag
+the server in, and that duplication is the risk it has to be tested for: three
+definitions of the same nine fields, and one reordering makes every signature
+fail to recover while everything still typechecks. `test:sdk` checks the enums
+against the server's, the digest against the server's over 45 enum
+combinations, and the locally computed band against `getBandedPrice` on the
+live contract for every tracked ticker.
+
+Full documentation in [sdk/README.md](sdk/README.md).
+
 ## Tests
 
 ```bash
@@ -176,6 +371,11 @@ npm run test:providers  # provider registry, consensus, proxy series
 npm run test:weekend    # confidence widening across the dark window
 npm run test:browser    # Playwright across every page, console errors, mobile
 npm run test:onchain    # deploy to anvil, post a real signed quote, read back
+npm run test:ledger     # coverage scoring: fixtures, then 2y of real gaps
+forge test -vv          # 16 Solidity tests for the keeper, incl. partial batches
+npm run test:keeper     # batch relay end-to-end on anvil with real signed quotes
+npm run test:sdk        # SDK vs server vs contract; live chain and live API
+npm run ledger          # print the on-chain track record
 ```
 
 `test:browser` needs `npm run dev` running. `test:onchain` needs `anvil` and
@@ -451,12 +651,15 @@ Extra environment for the relayer:
 
 ```
 contracts/HoodOracle.sol     verifier + session-aware read interface
+contracts/HoodOracleKeeper.sol  batch relay + staleness discovery
+test/HoodOracleKeeper.t.sol     forge tests, no external dependencies
 src/lib/session.ts           NYSE calendar, DST, holidays, early closes
 src/lib/quote.ts             the engine: provenance, drift, confidence
-src/lib/dia.ts               upstream client, zero-price guard, caching
 src/lib/sign.ts              digest + EIP-191 signing
-src/app/api/                 three endpoints
-scripts/                     unit, weekend, browser and on-chain tests
+src/lib/ledger.ts            the track record, rebuilt from chain logs
+src/app/api/                 quote, quotes, health, coverage, cron
+sdk/                         @hoodoracle/sdk — typed client, policy, hooks
+scripts/                     unit, weekend, browser, on-chain, ledger, sdk tests
 ```
 
 ## Limits
