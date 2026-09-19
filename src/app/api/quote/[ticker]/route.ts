@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { buildQuote } from "@/lib/quote";
 import { moveSince } from "@/lib/providers";
-import { signQuote } from "@/lib/sign";
+import { isSignerConfigured, signQuote } from "@/lib/sign";
 import { findInstrument, UNIVERSE } from "@/lib/universe";
 import { PROVENANCE_NAME, SESSION_NAME } from "@/lib/types";
 import { describeGap } from "@/lib/session";
@@ -61,6 +61,14 @@ export async function GET(
         })),
         sources,
         sourceFailures: failures,
+        ...(isSignerConfigured()
+          ? {}
+          : {
+              warning:
+                "ORACLE_SIGNER_KEY is not set on this deployment. The signature " +
+                "above is from an ephemeral key and will be rejected on-chain " +
+                "with UnknownSigner. Do not relay this quote.",
+            }),
       },
       { headers: { "cache-control": "no-store" } },
     );

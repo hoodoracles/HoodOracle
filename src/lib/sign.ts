@@ -16,6 +16,21 @@ import {
 import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
 import type { Quote, SignedQuote } from "./types";
 
+/**
+ * True when a real signing key is configured.
+ *
+ * This matters more than it looks. Without a key the service still produces
+ * well-formed signatures, but from an address the deployed contract has never
+ * allow-listed, so every quote it publishes is rejected on-chain. A deployment
+ * in that state looks entirely healthy from the outside, which is how it
+ * reached production once already. Health and the quote endpoints read this so
+ * the failure is loud instead of silent.
+ */
+export function isSignerConfigured(): boolean {
+  const raw = process.env.ORACLE_SIGNER_KEY;
+  return Boolean(raw && /^0x[0-9a-fA-F]{64}$/.test(raw));
+}
+
 function loadKey(): Hex {
   const raw = process.env.ORACLE_SIGNER_KEY;
   if (raw && /^0x[0-9a-fA-F]{64}$/.test(raw)) return raw as Hex;
@@ -31,7 +46,8 @@ function loadKey(): Hex {
     if (process.env.NODE_ENV !== "test") {
       console.warn(
         "[hoodoracle] ORACLE_SIGNER_KEY not set, using an ephemeral dev key. " +
-          "Signatures will change on restart. Set one in .env.local.",
+          "Signatures will change on restart and will NOT be accepted by any " +
+          "deployed contract. Set one in .env.local or the host's environment.",
       );
     }
   }
