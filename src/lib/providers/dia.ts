@@ -7,7 +7,8 @@
 
 import { assertPrice, getJson, type Provider, type Reading } from "./types";
 
-const BASE = process.env.DIA_API_BASE ?? "https://api.diadata.org";
+// Fixed: DIA is an optional cross-check, not a configurable upstream.
+const BASE = "https://api.diadata.org";
 const ENABLED = process.env.DIA_ENABLED === "true";
 
 interface DiaRwa {
