@@ -8,6 +8,8 @@
 // requirement. Quotes that would revert are skipped rather than sent, so a
 // weekend run does not burn gas failing.
 
+import "./env.mts";
+
 import { readFileSync } from "node:fs";
 import { createPublicClient, createWalletClient, formatEther, http, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";

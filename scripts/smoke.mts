@@ -1,3 +1,5 @@
+import "./env.mts";
+
 import { classifySession, etClock, nextSessionChange, lastTradableInstant, describeGap } from "../src/lib/session";
 import { SESSION_NAME } from "../src/lib/types";
 import { UNIVERSE, findInstrument } from "../src/lib/universe";

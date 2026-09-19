@@ -10,6 +10,8 @@
 //
 // A live target refuses to run without DEPLOY_CONFIRM=yes.
 
+import "./env.mts";
+
 import { readFileSync } from "node:fs";
 import {
   createPublicClient,

@@ -5,6 +5,8 @@
 // Solidity digest and the TypeScript encoder disagree by a single byte, the
 // signature will not recover and nothing downstream works.
 
+import "./env.mts";
+
 import { readFileSync } from "node:fs";
 import {
   createWalletClient,

@@ -317,9 +317,54 @@ The signer key is the one secret that matters: it is what the deployed contract
 allow-lists. Rotate it with `setSigner(newAddress, true)` on the contract before
 changing it in the host, never after.
 
-**The relayer does not belong on Vercel.** `npm run publish -- <target> <addr>
---watch` is a long-lived process that holds a funded key. Run it on a small VM
-or a scheduled job, not in a serverless function.
+### Keeping the chain fresh
+
+A blockchain cannot fetch anything. The contract holds whatever was last pushed
+to it, so without a relayer the on-chain quote freezes while the API stays
+current, and a consumer contract reads an increasingly old number.
+
+Two ways to drive it.
+
+**Scheduled HTTP (recommended).** `GET /api/cron/publish` builds, signs and
+posts in one short invocation. Point any scheduler at it — cron-job.org, Vercel
+Cron, GitHub Actions, a `curl` in crontab:
+
+```
+URL     https://<your-host>/api/cron/publish
+Header  Authorization: Bearer <CRON_SECRET>
+Every   5 minutes
+```
+
+A scheduler only needs to make an authenticated request; it never holds a key.
+The endpoint does, in `RELAYER_KEY`.
+
+**Long-running process.** `npm run publish -- <target> <addr> --watch` does the
+same thing from a machine you control. It is a long-lived process holding a
+funded key, so it belongs on a VM, not in a serverless function.
+
+#### What the endpoint will not do
+
+Every call spends gas, so it is deliberately stingy:
+
+- **Requires a secret.** With `CRON_SECRET` unset it returns 401 and posts
+  nothing, rather than defaulting open.
+- **Posts only what moved.** Below a 10bps price move and a 15bps band move it
+  skips, so a quiet weekend at a five-minute schedule costs nothing. Tune with
+  `CRON_PRICE_MOVE_BPS`, `CRON_BAND_MOVE_BPS`, `CRON_MAX_ONCHAIN_AGE`.
+- **Refreshes anyway after 3 hours**, so a feed never silently rots.
+- **Sends with explicit nonces and does not await receipts.** Eight sequential
+  receipt waits outlive a serverless invocation, and the receipt says nothing
+  the next run cannot read back.
+
+Extra environment for the relayer:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `CRON_SECRET` | yes | Shared secret. Without it the endpoint stays shut. |
+| `RELAYER_KEY` | yes | Funded key that pays gas. Separate from the signer. |
+| `CRON_PRICE_MOVE_BPS` | no | Default 10. |
+| `CRON_BAND_MOVE_BPS` | no | Default 15. |
+| `CRON_MAX_ONCHAIN_AGE` | no | Default 10800 (3h). |
 
 ## Layout
 

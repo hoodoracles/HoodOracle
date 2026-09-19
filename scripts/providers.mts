@@ -1,3 +1,5 @@
+import "./env.mts";
+
 import { ALL_PROVIDERS, enabledProviders, fetchConsensus } from "../src/lib/providers/index.ts";
 import { fetchProxies, blendedMoveSince, moveSince, recentVolatility } from "../src/lib/providers/proxy.ts";
 import { buildQuotes } from "../src/lib/quote.ts";

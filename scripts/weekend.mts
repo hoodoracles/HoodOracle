@@ -1,3 +1,5 @@
+import "./env.mts";
+
 import { buildQuote, buildQuotes } from "../src/lib/quote.ts";
 import { findInstrument, UNIVERSE } from "../src/lib/universe.ts";
 import { SESSION_NAME, PROVENANCE_NAME } from "../src/lib/types.ts";

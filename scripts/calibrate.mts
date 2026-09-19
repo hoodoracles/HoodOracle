@@ -17,6 +17,8 @@
 //   time, residual sigma divided by sqrt(hours) should be roughly flat across
 //   overnight and weekend buckets.
 
+import "./env.mts";
+
 import { writeFileSync } from "node:fs";
 import { UNIVERSE } from "../src/lib/universe.ts";
 
