@@ -293,12 +293,33 @@ cast call 0x65cf45524407a5e700188a8a8178d5d5c0c38d30 \
 
 ### Service
 
-Any Node host. Vercel is the natural fit.
+Any Node host. Vercel autodetects Next.js, so no config file is needed.
+
+```bash
+# 1. import the repo at vercel.com/new
+# 2. set the env vars below in Project Settings -> Environment Variables
+# 3. deploy
+```
 
 | Variable | Required | Notes |
 |---|---|---|
-| `ORACLE_SIGNER_KEY` | yes | Without it the app boots with an ephemeral key and signatures change on restart |
-| `DIA_API_BASE` | no | Defaults to `https://api.diadata.org` |
+| `ORACLE_SIGNER_KEY` | **yes** | 32-byte hex. Without it the app boots with an ephemeral key, so signatures change on every cold start and nothing the contract already trusts will verify. |
+| `NEXT_PUBLIC_ORACLE_ADDRESS` | no | Shows the live on-chain panel on the dashboard. |
+| `NEXT_PUBLIC_ORACLE_CHAIN` | no | Display name, e.g. `Robinhood Chain`. |
+| `NEXT_PUBLIC_ORACLE_CHAIN_ID` | no | e.g. `4663`. |
+| `NEXT_PUBLIC_ORACLE_RPC` | no | Used in the copy-paste `cast` examples. |
+| `FINNHUB_API_KEY` | no | Enables a second provider, free at finnhub.io. |
+| `TWELVEDATA_API_KEY` | no | Enables a third provider, free at twelvedata.com. |
+| `ALPACA_API_KEY` / `ALPACA_API_SECRET` | no | Enables Alpaca (IEX), free at alpaca.markets. |
+| `DIA_ENABLED` | no | `true` adds DIA as a cross-check. Off by default. |
+
+The signer key is the one secret that matters: it is what the deployed contract
+allow-lists. Rotate it with `setSigner(newAddress, true)` on the contract before
+changing it in the host, never after.
+
+**The relayer does not belong on Vercel.** `npm run publish -- <target> <addr>
+--watch` is a long-lived process that holds a funded key. Run it on a small VM
+or a scheduled job, not in a serverless function.
 
 ## Layout
 
