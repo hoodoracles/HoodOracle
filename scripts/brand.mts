@@ -30,6 +30,11 @@ const MARK_NOTE = `  <!-- Two confidence intervals sharing one estimate axis: sa
 const SIMPLE_NOTE = `  <!-- Favicon scale reduction: one interval. Two bars and a spine turn to
        mush below about 24px, so small sizes keep the idea and drop the pair. -->`;
 
+const INK = "#16161a";
+const ACCENT = "#1b3f60";
+const PAPER = "#fbfaf8";
+const ACCENT_ON_INK = "#9dc2e0";
+
 function open_(label: string) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="${label}">\n  <title>${label}</title>\n`;
 }
@@ -61,6 +66,37 @@ function markSvg(ink: string, accent: string, spineOpacity: string): string {
   return open_("hoodoracle") + MARK_NOTE + "\n" + parts.join("\n") + "\n</svg>\n";
 }
 
+/**
+ * The favicon, adapting to the browser's theme.
+ *
+ * A tab strip can be light or dark and the same file serves both. Ink strokes
+ * on transparent simply vanish on a dark tab, which is how a favicon quietly
+ * stops existing for half the people who visit.
+ */
+function adaptiveSvg(): string {
+  return (
+    open_("hoodoracle") +
+    SIMPLE_NOTE +
+    `
+  <style>
+    .s { fill: ${INK}; }
+    .d { fill: ${ACCENT}; }
+    @media (prefers-color-scheme: dark) {
+      .s { fill: ${PAPER}; }
+      .d { fill: ${ACCENT_ON_INK}; }
+    }
+  </style>
+  <g class="s">
+    <rect x="12" y="47" width="76" height="6" rx="3"/>
+    <rect x="12" y="35" width="6" height="30" rx="3"/>
+    <rect x="82" y="35" width="6" height="30" rx="3"/>
+  </g>
+  <circle class="d" cx="50" cy="50" r="10.5"/>
+</svg>
+`
+  );
+}
+
 function simpleSvg(ink: string, accent: string): string {
   return (
     open_("hoodoracle") +
@@ -75,11 +111,6 @@ function simpleSvg(ink: string, accent: string): string {
   );
 }
 
-const INK = "#16161a";
-const ACCENT = "#1b3f60";
-const PAPER = "#fbfaf8";
-const ACCENT_ON_INK = "#9dc2e0";
-
 function writeMarks(): void {
   const files: Record<string, string> = {
     "brand/mark.svg": markSvg(INK, ACCENT, ".38"),
@@ -87,6 +118,7 @@ function writeMarks(): void {
     "brand/mark-mono.svg": markSvg(INK, INK, ".38"),
     "brand/mark-simple.svg": simpleSvg(INK, ACCENT),
     "brand/mark-simple-ink.svg": simpleSvg(PAPER, ACCENT_ON_INK),
+    "brand/mark-adaptive.svg": adaptiveSvg(),
   };
   for (const [path, body] of Object.entries(files)) {
     if (body.includes("--", body.indexOf("<!--") + 4)) {
@@ -108,6 +140,13 @@ interface Target {
   height: number;
   /** 2 gives a retina-grade export; DEX Screener compresses on their side. */
   scale?: number;
+  /**
+   * Drops the default page background so the PNG is written with an alpha
+   * channel. The .canvas element still paints its own ground, so the pixels
+   * stay opaque; only the encoding changes. Next's .ico decoder rejects a
+   * PNG that is not RGBA, and a screenshot of an opaque page is RGB.
+   */
+  rgba?: boolean;
 }
 
 const TARGETS: Target[] = [
@@ -121,7 +160,11 @@ const TARGETS: Target[] = [
   },
   { page: "avatar", out: "avatar", width: 400, height: 400, scale: 2 },
   { page: "avatar-ink", out: "avatar-ink", width: 400, height: 400, scale: 2 },
-  { page: "apple-icon", out: "apple-icon", width: 180, height: 180, scale: 1 },
+  // One page, several sizes. Apple wants 180; the manifest wants 192 and 512.
+  { page: "icon-square", out: "apple-icon", width: 180, height: 180, scale: 1 },
+  { page: "icon-square", out: "icon-192", width: 192, height: 192, scale: 1 },
+  { page: "icon-square", out: "icon-512", width: 512, height: 512, scale: 1 },
+  { page: "icon-maskable", out: "icon-512-maskable", width: 512, height: 512, scale: 1 },
   { page: "og", out: "og-image", width: 1200, height: 630 },
   // 1x proof copy, small enough to eyeball without downscaling
   { page: "og", out: "og-preview", width: 1200, height: 630, scale: 1 },
@@ -210,7 +253,7 @@ for (const t of targets) {
   });
 
   const path = `${OUT}/${t.out}.png`;
-  await page.screenshot({ path, scale: "device" });
+  await page.screenshot({ path, scale: "device", omitBackground: t.rgba === true });
 
   const problems = [
     ...broken,

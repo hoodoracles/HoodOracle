@@ -16,7 +16,7 @@
     "test:providers": "tsx scripts/providers.mts",
     "calibrate": "tsx scripts/calibrate.mts",
     "state": "tsx scripts/state.mts",
-    "brand": "tsx scripts/brand.mts"
+    "brand": "tsx scripts/brand.mts && tsx scripts/ico.mts"
   },
   "license": "ISC",
   "private": true,

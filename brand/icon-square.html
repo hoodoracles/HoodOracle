@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<link rel="stylesheet" href="brand.css"/>
+<style>
+  /* Size-agnostic: the viewport sets the size, so one page renders the
+     180px touch icon and the 192/512 manifest icons. Opaque ground because
+     iOS and Android composite these themselves and handle alpha badly, and
+     no graticule: a 60px grid is noise below 256px. */
+  html,body{height:100%}
+  .canvas{width:100vw;height:100vh;display:grid;place-items:center;background:#16161a}
+  img{width:64%;height:64%}
+</style></head>
+<body><div class="canvas"><img src="mark-ink.svg" alt=""/></div></body></html>

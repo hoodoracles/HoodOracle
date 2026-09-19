@@ -46,6 +46,11 @@ that reduction.
 | `avatar.png` / `avatar-ink.png` | 800×800 | Profile pictures |
 | `og-image.png` | 2400×1260 | Link previews |
 | `apple-icon.png` | 180×180 | iOS home screen |
+| `icon-192/512.png` | 192, 512 | Web manifest |
+| `icon-512-maskable.png` | 512×512 | Android adaptive icon, 80% safe zone |
+
+`src/app/favicon.ico` is built separately by `scripts/ico.mts`, which runs as
+the second half of `npm run brand`.
 
 Both headers are 3:1. [DEX Screener](https://docs.dexscreener.com) wants 3:1 at
 600px wide or more and compresses on their side, so these are exported at 2x.
@@ -72,6 +77,13 @@ An **XML comment may not contain `--`**. An `<img src="*.svg">` is parsed by
 the strict XML parser, so a stray double hyphen does not throw — it silently
 yields a broken-image placeholder, at full banner size. The generator refuses
 to write one and the renderer fails if any image decodes to nothing.
+
+**Chromium will not encode an RGBA PNG** for a fully opaque image, and Next's
+`.ico` decoder rejects any member that is not RGBA — failing the whole build,
+not just the icon. So `scripts/ico.mts` uses the browser only to rasterise,
+pulls raw pixels back through `getImageData`, and writes the PNG itself with
+colour type 6 guaranteed. The SVG goes in as a data URI because an image
+fetched over `file://` taints the canvas and `getImageData` then throws.
 
 A **web font that never arrived** renders in a fallback that looks plausible
 and is not the brand. The renderer checks each text element at the weight and

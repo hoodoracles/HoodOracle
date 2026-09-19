@@ -1,6 +1,12 @@
 import Link from "next/link";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+// Next moved themeColor out of `metadata` into its own export; leaving it in
+// metadata compiles but emits nothing.
+export const viewport: Viewport = {
+  themeColor: "#fbfaf8",
+};
 
 const TITLE = "hoodoracle — session-aware price feeds for tokenised equities";
 const DESCRIPTION =
