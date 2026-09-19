@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="brand.css" />
+    <style>
+      /* 3:1. No avatar overlay here, so the composition can be symmetric and
+         the board can carry the right-hand side. DEX Screener crops the edges
+         on narrow viewports, so nothing load-bearing sits outside the middle. */
+      .canvas {
+        width: 1500px;
+        height: 500px;
+        display: grid;
+        grid-template-columns: 500px 1px 1fr;
+        align-items: center;
+        gap: 66px;
+        padding: 0 92px;
+      }
+      .rule {
+        align-self: stretch;
+        margin: 74px 0;
+        background: var(--line);
+      }
+      .eyebrow {
+        font-size: 12.5px;
+        letter-spacing: 0.22em;
+        margin-bottom: 24px;
+      }
+      .lockup {
+        display: flex;
+        align-items: center;
+        gap: 19px;
+        margin-bottom: 20px;
+      }
+      .wordmark {
+        font-size: 58px;
+      }
+      .tag {
+        font-size: 19.5px;
+        max-width: 32ch;
+        margin-bottom: 22px;
+      }
+      .url {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--ink-3);
+        letter-spacing: 0.02em;
+      }
+
+      /* A live-looking board. Widths are the real sqrt scale the product uses,
+         so the tight feeds genuinely look tight. */
+      .board-t {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 4px;
+      }
+      .r {
+        display: grid;
+        grid-template-columns: 62px 96px 1fr 76px;
+        align-items: center;
+        gap: 14px;
+        padding: 13px 0;
+        border-bottom: 1px solid var(--line-2);
+      }
+      .r:last-child {
+        border-bottom: none;
+      }
+      .sym {
+        font-family: var(--mono);
+        font-weight: 600;
+        font-size: 15px;
+        color: var(--ink);
+      }
+      .val {
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--ink-2);
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .pct {
+        font-family: var(--mono);
+        font-size: 13.5px;
+        font-weight: 500;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .b {
+        position: relative;
+        height: 18px;
+      }
+      .b i {
+        position: absolute;
+        background: currentColor;
+        display: block;
+      }
+      .b .tr {
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 1px;
+        background: var(--line);
+        transform: translateY(-50%);
+      }
+      .b .sp {
+        top: 50%;
+        height: 3px;
+        transform: translateY(-50%);
+        opacity: 0.32;
+        border-radius: 2px;
+      }
+      .b .cp {
+        top: 2px;
+        bottom: 2px;
+        width: 2px;
+        border-radius: 1px;
+      }
+      .b .dt {
+        left: 50%;
+        top: 50%;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas on-ink">
+      <div class="graticule"></div>
+
+      <div style="position: relative">
+        <div class="eyebrow">LIVE ON ROBINHOOD CHAIN · 4663</div>
+        <div class="lockup">
+          <img class="mark" src="mark-ink.svg" width="80" height="80" alt="" />
+          <span class="wordmark">hoodoracle</span>
+        </div>
+        <div class="tag">
+          Every price carries its provenance and a calibrated 95% band.
+        </div>
+        <div class="url">hoodoracle-neon.vercel.app</div>
+      </div>
+
+      <div class="rule"></div>
+
+      <div style="position: relative">
+        <div class="board-t">
+          <span>instrument</span><span>95% confidence band</span>
+        </div>
+
+        <div class="r">
+          <span class="sym">HOOD</span><span class="val">$119.70</span>
+          <span class="b q-vwide"
+            ><i class="tr"></i><i class="sp" style="left: 26.5%; right: 26.5%"></i
+            ><i class="cp" style="left: 26.5%"></i
+            ><i class="cp" style="right: 26.5%"></i><i class="dt"></i
+          ></span>
+          <span class="pct q-vwide">±3.86%</span>
+        </div>
+
+        <div class="r">
+          <span class="sym">MSTR</span><span class="val">$153.53</span>
+          <span class="b q-wide"
+            ><i class="tr"></i><i class="sp" style="left: 29.2%; right: 29.2%"></i
+            ><i class="cp" style="left: 29.2%"></i
+            ><i class="cp" style="right: 29.2%"></i><i class="dt"></i
+          ></span>
+          <span class="pct q-wide">±3.07%</span>
+        </div>
+
+        <div class="r">
+          <span class="sym">AAPL</span><span class="val">$336.12</span>
+          <span class="b q-ok"
+            ><i class="tr"></i><i class="sp" style="left: 33.8%; right: 33.8%"></i
+            ><i class="cp" style="left: 33.8%"></i
+            ><i class="cp" style="right: 33.8%"></i><i class="dt"></i
+          ></span>
+          <span class="pct q-ok">±1.84%</span>
+        </div>
+
+        <div class="r">
+          <span class="sym">SPY</span><span class="val">$761.66</span>
+          <span class="b q-tight"
+            ><i class="tr"></i><i class="sp" style="left: 38.2%; right: 38.2%"></i
+            ><i class="cp" style="left: 38.2%"></i
+            ><i class="cp" style="right: 38.2%"></i><i class="dt"></i
+          ></span>
+          <span class="pct q-tight">±0.97%</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

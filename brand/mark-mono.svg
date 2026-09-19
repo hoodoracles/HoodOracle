@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="hoodoracle">
+  <title>hoodoracle</title>
+  <!-- Two confidence intervals sharing one estimate axis: same price, two
+       different degrees of certainty about it. That pairing is what this
+       oracle publishes and the others do not. The spine is load bearing;
+       without it the two intervals read as unrelated objects. -->
+  <rect x="48.5" y="23" width="3" height="54" rx="1.5" fill="#16161a" opacity=".38"/>
+  <rect x="10" y="31" width="80" height="6" rx="3" fill="#16161a"/>
+  <rect x="10" y="23" width="6" height="22" rx="3" fill="#16161a"/>
+  <rect x="84" y="23" width="6" height="22" rx="3" fill="#16161a"/>
+  <rect x="27" y="63" width="46" height="6" rx="3" fill="#16161a"/>
+  <rect x="27" y="55" width="6" height="22" rx="3" fill="#16161a"/>
+  <rect x="67" y="55" width="6" height="22" rx="3" fill="#16161a"/>
+  <circle cx="50" cy="34" r="7" fill="#16161a"/>
+  <circle cx="50" cy="66" r="7" fill="#16161a"/>
+</svg>

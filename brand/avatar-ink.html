@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<link rel="stylesheet" href="brand.css"/>
+<style>
+  /* 400x400. X and DEX Screener crop avatars to a circle, so the mark sits
+     well inside the inscribed circle. No rounded tile: a tile inside a
+     circular crop only loses its corners. */
+  .canvas{width:400px;height:400px;display:grid;place-items:center}
+  .graticule{opacity:.45}
+  .mark{position:relative}
+</style></head>
+<body><div class="canvas on-ink">
+  <div class="graticule"></div>
+  <img class="mark" src="mark-ink.svg" width="236" height="236" alt=""/>
+</div></body></html>

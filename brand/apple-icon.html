@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<link rel="stylesheet" href="brand.css"/>
+<style>
+  /* 180x180. iOS composites this on its own rounded rect and handles
+     transparency badly, so it ships with an opaque ground and no graticule:
+     a 60px grid is noise at this size. */
+  .canvas{width:180px;height:180px;display:grid;place-items:center;background:#16161a}
+</style></head>
+<body><div class="canvas"><img src="mark-ink.svg" width="116" height="116" alt=""/></div></body></html>

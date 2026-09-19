@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="brand.css" />
+    <style>
+      /* 1200x630 — the link-preview card. Read at postage-stamp size in a
+         timeline, so it carries one sentence and one diagram, nothing else. */
+      .canvas {
+        width: 1200px;
+        height: 630px;
+        padding: 68px 72px;
+        display: flex;
+        flex-direction: column;
+      }
+      .lockup {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .wordmark {
+        font-size: 42px;
+      }
+      h1 {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 66px;
+        line-height: 1.07;
+        letter-spacing: -0.022em;
+        margin: 52px 0 0;
+        max-width: 17ch;
+        color: var(--ink);
+      }
+      .tag {
+        font-size: 22px;
+        margin-top: 22px;
+        max-width: 54ch;
+      }
+      .foot {
+        margin-top: auto;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        border-top: 1px solid var(--line);
+        padding-top: 24px;
+      }
+      .figs {
+        display: flex;
+        gap: 46px;
+      }
+      .k {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        margin-bottom: 7px;
+      }
+      .v {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 30px;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+      .url {
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--ink-3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <div class="graticule"></div>
+
+      <div class="lockup" style="position: relative">
+        <img class="mark" src="mark.svg" width="56" height="56" alt="" />
+        <span class="wordmark">hoodoracle</span>
+      </div>
+
+      <h1 style="position: relative">
+        Price any equity. Publish the error bar with it.
+      </h1>
+      <div class="tag" style="position: relative">
+        Session-aware price feeds for tokenised equities. Every quote carries
+        its provenance and a confidence band fitted on two years of realised
+        gaps.
+      </div>
+
+      <div class="foot" style="position: relative">
+        <div class="figs">
+          <div>
+            <div class="k">observed coverage</div>
+            <div class="v">93.4—96.4%</div>
+          </div>
+          <div>
+            <div class="k">time exponent</div>
+            <div class="v">k = 0.107</div>
+          </div>
+          <div>
+            <div class="k">gaps fitted</div>
+            <div class="v">3,990</div>
+          </div>
+        </div>
+        <div class="url">hoodoracle-neon.vercel.app</div>
+      </div>
+    </div>
+  </body>
+</html>

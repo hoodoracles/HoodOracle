@@ -2,10 +2,29 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import "./globals.css";
 
+const TITLE = "hoodoracle — session-aware price feeds for tokenised equities";
+const DESCRIPTION =
+  "Tokenised equities trade 24/7. The shares behind them price 6.5 hours a day. hoodoracle publishes the price, how it was obtained, and how much to trust it right now.";
+
 export const metadata: Metadata = {
-  title: "hoodoracle — session-aware price feeds for tokenised equities",
-  description:
-    "Tokenised equities trade 24/7. The shares behind them price 6.5 hours a day. hoodoracle publishes the price, how it was obtained, and how much to trust it right now.",
+  // Relative image paths in the metadata below resolve against this, so
+  // without it a shared link renders with no preview card at all.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://hoodoracle-neon.vercel.app",
+  ),
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    title: TITLE,
+    description: DESCRIPTION,
+    siteName: "hoodoracle",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 const NAV = [
@@ -39,9 +58,32 @@ export default function RootLayout({
         <nav className="nav">
           <div className="shell nav-in">
             <Link className="brand" href="/">
-              <span className="brand-mark">
-                <i />
-              </span>
+              {/* The mark, inline so it needs no request and cannot 404.
+                  Geometry is generated in scripts/brand.mts; the banners and
+                  the favicon are the same drawing at other sizes. */}
+              <svg
+                className="brand-mark"
+                viewBox="0 0 100 100"
+                aria-hidden="true"
+              >
+                <rect
+                  x="48.5"
+                  y="23"
+                  width="3"
+                  height="54"
+                  rx="1.5"
+                  fill="currentColor"
+                  opacity=".38"
+                />
+                <rect x="10" y="31" width="80" height="6" rx="3" fill="currentColor" />
+                <rect x="10" y="23" width="6" height="22" rx="3" fill="currentColor" />
+                <rect x="84" y="23" width="6" height="22" rx="3" fill="currentColor" />
+                <rect x="27" y="63" width="46" height="6" rx="3" fill="currentColor" />
+                <rect x="27" y="55" width="6" height="22" rx="3" fill="currentColor" />
+                <rect x="67" y="55" width="6" height="22" rx="3" fill="currentColor" />
+                <circle cx="50" cy="34" r="7" fill="var(--accent)" />
+                <circle cx="50" cy="66" r="7" fill="var(--accent)" />
+              </svg>
               hoodoracle
             </Link>
             <div className="nav-links">

@@ -1,0 +1,164 @@
+/*
+ * hoodoracle brand surfaces
+ * ─────────────────────────
+ * Same tokens as the product. A banner that does not look like the site is
+ * not branding, it is decoration.
+ */
+
+:root {
+  --paper: #fbfaf8;
+  --surface: #ffffff;
+  --ink: #16161a;
+  --ink-2: #4a4a53;
+  --ink-3: #75757f;
+  --ink-4: #a0a0aa;
+  --line: #e3dfd8;
+  --line-2: #eeebe5;
+  --accent: #1b3f60;
+  --accent-line: #cdd9e4;
+  --accent-soft: #eef2f6;
+
+  --q-tight: #1a6b4a;
+  --q-ok: #4a4a53;
+  --q-wide: #8a6208;
+  --q-vwide: #a3372c;
+
+  --display: "Source Serif 4", Georgia, serif;
+  --sans: "Inter", -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* Ink ground, for the dark-context variants. Warm, never pure black. */
+.on-ink {
+  --paper: #16161a;
+  --surface: #1e1e23;
+  --ink: #f7f5f2;
+  --ink-2: #b9b6b1;
+  --ink-3: #8b8882;
+  --ink-4: #6b6862;
+  --line: #34343b;
+  --line-2: #26262c;
+  --accent: #9dc2e0;
+  --accent-line: #3a4c5c;
+  --accent-soft: #1d2731;
+
+  --q-tight: #62c39a;
+  --q-ok: #b9b6b1;
+  --q-wide: #d8a648;
+  --q-vwide: #e8836f;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "tnum" 1;
+}
+
+.canvas {
+  background: var(--paper);
+  color: var(--ink);
+  position: relative;
+  overflow: hidden;
+}
+
+/* A faint measuring grid. The product is about quantified uncertainty; a
+   graticule says that without a word, and stays invisible at thumbnail size. */
+.graticule {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--line-2) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line-2) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.75;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.tag {
+  font-family: var(--sans);
+  color: var(--ink-2);
+  line-height: 1.35;
+}
+
+.url {
+  font-family: var(--mono);
+  color: var(--ink-3);
+}
+
+/* ── the interval, drawn ─────────────────────────────────────────────── */
+
+.bar {
+  position: relative;
+  display: block;
+}
+.bar i {
+  position: absolute;
+  background: currentColor;
+  display: block;
+}
+.bar .cap {
+  top: 0;
+  bottom: 0;
+  width: var(--cap, 4px);
+  border-radius: 1px;
+}
+.bar .cap.l {
+  left: 0;
+}
+.bar .cap.r {
+  right: 0;
+}
+.bar .span {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--span, 3px);
+  transform: translateY(-50%);
+  opacity: 0.3;
+  border-radius: 2px;
+}
+.bar .dot {
+  left: 50%;
+  top: 50%;
+  width: var(--dot, 16px);
+  height: var(--dot, 16px);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.q-tight {
+  color: var(--q-tight);
+}
+.q-ok {
+  color: var(--q-ok);
+}
+.q-wide {
+  color: var(--q-wide);
+}
+.q-vwide {
+  color: var(--q-vwide);
+}

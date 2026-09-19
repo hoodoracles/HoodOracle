@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="brand.css" />
+    <style>
+      /* 1500x500. X overlays the avatar on the bottom-left, roughly a 200px
+         circle inside x<300 / y>350, so that corner stays empty on purpose. */
+      .canvas {
+        width: 1500px;
+        height: 500px;
+        display: grid;
+        grid-template-columns: 500px 1fr;
+        align-items: center;
+        gap: 64px;
+        padding: 0 92px;
+      }
+      .eyebrow {
+        font-size: 13px;
+        letter-spacing: 0.22em;
+        margin-bottom: 26px;
+      }
+      .lockup {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+      .wordmark {
+        font-size: 64px;
+      }
+      .tag {
+        font-size: 21px;
+        max-width: 26ch;
+      }
+      .url {
+        position: absolute;
+        right: 96px;
+        bottom: 46px;
+        font-size: 13.5px;
+        letter-spacing: 0.02em;
+      }
+
+      /* The annotated interval: the product explained without a sentence. */
+      .fig {
+        position: relative;
+        padding-top: 4px;
+      }
+      .axis {
+        position: relative;
+        height: 54px;
+      }
+      .axis .span {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 5px;
+        transform: translateY(-50%);
+        background: var(--ink);
+        border-radius: 3px;
+      }
+      .axis .cap {
+        position: absolute;
+        top: 8px;
+        bottom: 8px;
+        width: 5px;
+        background: var(--ink);
+        border-radius: 3px;
+      }
+      .axis .cap.l {
+        left: 0;
+      }
+      .axis .cap.r {
+        right: 0;
+      }
+      .axis .dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--accent);
+        transform: translate(-50%, -50%);
+      }
+      .px {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+        font-size: 19px;
+        font-weight: 500;
+        margin-bottom: 10px;
+      }
+      .px .mid {
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 22px;
+      }
+      .roles {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        margin-top: 8px;
+      }
+      .band-note {
+        margin-top: 20px;
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--ink-2);
+        text-align: center;
+        letter-spacing: 0.04em;
+      }
+      .band-note b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <div class="graticule"></div>
+
+      <div style="position: relative">
+        <div class="eyebrow">SESSION-AWARE ORACLE</div>
+        <div class="lockup">
+          <img class="mark" src="mark.svg" width="86" height="86" alt="" />
+          <span class="wordmark">hoodoracle</span>
+        </div>
+        <div class="tag">
+          Price any equity. Publish the error bar with it.
+        </div>
+      </div>
+
+      <div class="fig">
+        <div class="px">
+          <span>$115.08</span>
+          <span class="mid">$119.70</span>
+          <span>$124.32</span>
+        </div>
+        <div class="axis">
+          <i class="span"></i>
+          <i class="cap l"></i>
+          <i class="cap r"></i>
+          <i class="dot"></i>
+        </div>
+        <div class="roles">
+          <span>lower bound</span>
+          <span>estimate</span>
+          <span>upper bound</span>
+        </div>
+        <div class="band-note">
+          <b>±3.86%</b> · 95% interval · fitted on 3,990 real gaps
+        </div>
+      </div>
+
+      <div class="url">hoodoracle-neon.vercel.app</div>
+    </div>
+  </body>
+</html>

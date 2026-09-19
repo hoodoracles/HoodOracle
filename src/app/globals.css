@@ -242,37 +242,14 @@ main {
 .brand:hover {
   text-decoration: none;
 }
-/* The mark is the product: a point with an interval either side of it. */
+/* The mark: two confidence intervals around one estimate. The bars take
+   currentColor so the mark inherits the brand's ink; only the estimate dots
+   carry the accent. */
 .brand-mark {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   flex: none;
-  display: grid;
-  place-items: center;
-  position: relative;
-}
-.brand-mark i {
-  display: block;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.brand-mark::before,
-.brand-mark::after {
-  content: "";
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  width: 1.5px;
-  background: var(--accent);
-  opacity: 0.55;
-}
-.brand-mark::before {
-  left: 2px;
-}
-.brand-mark::after {
-  right: 2px;
+  color: var(--ink);
 }
 
 .nav-links {

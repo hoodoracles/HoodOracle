@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="hoodoracle">
+  <title>hoodoracle</title>
+  <!-- Favicon scale reduction: one interval. Two bars and a spine turn to
+       mush below about 24px, so small sizes keep the idea and drop the pair. -->
+  <g fill="#fbfaf8">
+    <rect x="12" y="47" width="76" height="6" rx="3"/>
+    <rect x="12" y="35" width="6" height="30" rx="3"/>
+    <rect x="82" y="35" width="6" height="30" rx="3"/>
+  </g>
+  <circle cx="50" cy="50" r="10.5" fill="#9dc2e0"/>
+</svg>
