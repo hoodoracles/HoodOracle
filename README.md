@@ -338,6 +338,44 @@ Every   5 minutes
 A scheduler only needs to make an authenticated request; it never holds a key.
 The endpoint does, in `RELAYER_KEY`.
 
+#### Setting up cron-job.org
+
+The free tier allows a one-minute minimum interval and custom request headers,
+which is everything this needs.
+
+1. **Create job** → Title `hoodoracle publish`, URL
+   `https://<your-host>/api/cron/publish`.
+2. **Schedule** → *Every 5 minutes* (`*/5 * * * *`). Times are UTC.
+3. **Advanced → Headers** → add `Authorization` with value
+   `Bearer <CRON_SECRET>`. Put the secret in the header, not the `?key=` query
+   parameter: query strings are logged by proxies and show up in referrers.
+4. **Advanced** → request method `GET`, enable *Save responses* so a failed run
+   leaves a body you can read, and turn on failure notifications.
+5. Save, then use **Test run**. A correct setup returns HTTP 200 with a JSON
+   body containing `ok`, `posted`, `skipped` and `balanceEth`.
+
+Check `GET /api/health` first. Its `relayer` block reports whether this
+deployment can publish at all, without exposing either secret:
+
+```json
+"relayer": {
+  "ready": true, "blockers": [], "cronSecretSet": true,
+  "keyConfigured": true, "address": "0x082E…7d91", "balanceEth": 0.00058
+}
+```
+
+`ready: false` lists exactly what is missing. The most common cause is
+environment variables added in the Vercel dashboard **after** the last
+deployment — Vercel applies them only to new deployments, so the running build
+still sees nothing and the endpoint answers 401 to a correctly configured
+scheduler. Redeploy, then re-check.
+
+> **Watch `balanceEth`.** A warm `postQuote` costs about 53k gas. Eight of them
+> is ~424k gas, and at the chain's ~0.067 gwei that is ~0.000028 ETH per full
+> run. A five-minute schedule is 288 runs a day; most skip on the materiality
+> thresholds, but an active session can post most of the universe on most runs.
+> Fund the relayer for the cadence you actually want, and alert on the balance.
+
 > **Do not use Vercel Cron for the real cadence on a Hobby plan.** Hobby rejects
 > any schedule that would fire more than once a day, and it rejects it *at
 > deploy time* — a `vercel.json` asking for `0 */3 * * *` fails the build, so

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { privateKeyToAccount } from "viem/accounts";
+import type { Hex } from "viem";
 import { isSignerConfigured, signerAddress } from "@/lib/sign";
 import { UNIVERSE } from "@/lib/universe";
 import { classifySession, describeGap, nextSessionChange } from "@/lib/session";
@@ -44,6 +46,96 @@ async function checkSignerTrusted(
   }
 }
 
+/** Native balance, in ether, or null when the RPC will not answer. */
+async function getBalanceEth(
+  rpc: string,
+  address: string,
+): Promise<number | null> {
+  try {
+    const res = await fetch(rpc, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "eth_getBalance",
+        params: [address, "latest"],
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(6000),
+    });
+    const json = (await res.json()) as { result?: string };
+    if (!json.result) return null;
+    return Number(BigInt(json.result)) / 1e18;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Can the scheduled relayer actually run?
+ *
+ * Three things have to be true at once and each fails silently on its own: the
+ * secret has to be set (or the endpoint refuses every caller, including the
+ * scheduler), the key has to be present and well formed, and the address it
+ * derives to has to hold gas. A relayer with no balance answers 200 and posts
+ * nothing but failures.
+ *
+ * Environment variables on Vercel only reach *new* deployments, so a value
+ * added in the dashboard and never redeployed reads as absent here. That is the
+ * case this block exists to make visible.
+ */
+async function checkRelayer(rpc: string | undefined) {
+  const key = process.env.RELAYER_KEY;
+  const keyValid = !!key && /^0x[0-9a-fA-F]{64}$/.test(key);
+
+  let address: string | null = null;
+  if (keyValid) {
+    try {
+      address = privateKeyToAccount(key as Hex).address;
+    } catch {
+      address = null;
+    }
+  }
+
+  const balanceEth =
+    address && rpc ? await getBalanceEth(rpc, address) : null;
+
+  // Kept out of the top-level `problems` on purpose. An API-only deployment
+  // that never publishes on-chain is a legitimate configuration, so a missing
+  // relayer must not turn the whole service 503.
+  const blockers: string[] = [];
+  if (!process.env.CRON_SECRET) {
+    blockers.push(
+      "CRON_SECRET is not set in this deployment, so /api/cron/publish refuses " +
+        "every caller. If you added it after the last deploy, redeploy: Vercel " +
+        "applies environment changes only to new deployments.",
+    );
+  }
+  if (!keyValid) {
+    blockers.push(
+      key
+        ? "RELAYER_KEY is set but is not a 0x-prefixed 32-byte hex key"
+        : "RELAYER_KEY is not set in this deployment, so nothing can pay gas",
+    );
+  }
+  if (balanceEth === 0) {
+    blockers.push(
+      `relayer ${address} holds no gas, so every postQuote will fail to send`,
+    );
+  }
+
+  return {
+    ready: blockers.length === 0,
+    blockers,
+    cronSecretSet: !!process.env.CRON_SECRET,
+    keyConfigured: keyValid,
+    /** Public either way — it is the `from` on every transaction it sends. */
+    address,
+    balanceEth,
+  };
+}
+
 export async function GET() {
   const now = new Date();
   const started = Date.now();
@@ -64,6 +156,7 @@ export async function GET() {
   const rpc = process.env.NEXT_PUBLIC_ORACLE_RPC;
   const signerTrusted =
     oracle && rpc ? await checkSignerTrusted(oracle, rpc, signer) : null;
+  const relayer = await checkRelayer(rpc);
 
   const problems: string[] = [];
   if (!upstreamOk) problems.push("no provider resolved");
@@ -107,6 +200,7 @@ export async function GET() {
         trustedOnChain: signerTrusted,
         contract: oracle ?? null,
       },
+      relayer,
       build: {
         // Vercel injects these. Without them we can only infer the deployed
         // version by probing for routes, which is a poor way to find out a
