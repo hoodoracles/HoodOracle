@@ -7,7 +7,7 @@ export default function Docs() {
   return (
     <div className="prose" style={{ paddingTop: 50 }}>
       <div className="eyebrow">Reference</div>
-      <h1 className="d1" style={{ fontSize: "clamp(40px,7vw,78px)", margin: "18px 0 26px" }}>Docs</h1>
+      <h1 className="d1" style={{ margin: "18px 0 26px" }}>Docs</h1>
 
       <p>
         Three endpoints, no auth, JSON only. Every quote is signed so a consumer
@@ -132,21 +132,21 @@ export default function Docs() {
         <tbody>
           <tr>
             <td>
-              <span className="tag tag-on-dark" style={{ color: "var(--mint)" }}>TRADED</span>
+              <span className="tag tag-box" style={{ color: "var(--q-tight)" }}>TRADED</span>
             </td>
             <td>Observed print, session open, under 5 minutes old.</td>
             <td>Settle, liquidate, mark.</td>
           </tr>
           <tr>
             <td>
-              <span className="tag tag-on-dark" style={{ color: "var(--amber)" }}>DERIVED</span>
+              <span className="tag tag-box" style={{ color: "var(--q-wide)" }}>DERIVED</span>
             </td>
             <td>Tape shut. Last close drifted against a 24/7 proxy.</td>
             <td>Mark to market, display, size positions. Not liquidate.</td>
           </tr>
           <tr>
             <td>
-              <span className="tag tag-on-dark" style={{ color: "var(--coral)" }}>STALE</span>
+              <span className="tag tag-box" style={{ color: "var(--q-vwide)" }}>STALE</span>
             </td>
             <td>
               No usable anchor, or the tape is open and upstream stopped

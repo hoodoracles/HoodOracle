@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { use, useCallback, useEffect, useState } from "react";
-import { Band, Glyph, Tag, fillFor, useOrigin } from "@/components/ui";
+import { Band, Tag, bandClass, bandVerdict, useOrigin } from "@/components/ui";
 
 interface Payload {
   quote: {
@@ -44,6 +44,14 @@ interface Payload {
   error?: string;
 }
 
+const kvRow: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "140px 1fr",
+  gap: 12,
+  padding: "8px 0",
+  borderBottom: "1px solid var(--line-2)",
+};
+
 export default function FeedPage({
   params,
 }: {
@@ -74,10 +82,12 @@ export default function FeedPage({
 
   if (err) {
     return (
-      <div className="stack-lg" style={{ paddingTop: 50 }}>
-        <div className="card fill-coral">
-          <div className="stat-k">{ticker}</div>
-          <h1 className="d3" style={{ marginBottom: 10 }}>
+      <div className="stack-lg" style={{ paddingTop: 56 }}>
+        <div className="note" style={{ borderLeftColor: "var(--q-vwide)" }}>
+          <div className="eyebrow" style={{ marginBottom: 8 }}>
+            {ticker}
+          </div>
+          <h1 className="d3" style={{ marginBottom: 8 }}>
             Could not price this instrument.
           </h1>
           <p style={{ margin: 0 }}>{err}</p>
@@ -93,17 +103,16 @@ export default function FeedPage({
 
   if (!d) {
     return (
-      <div style={{ paddingTop: 60 }} className="muted">
+      <div style={{ paddingTop: 64 }} className="muted">
         Loading {ticker}…
       </div>
     );
   }
 
   const q = d.quote;
-  const fill = fillFor(d.readable.provenance, q.confidenceBps);
 
   return (
-    <div className="stack-lg" style={{ paddingTop: 50 }}>
+    <div className="stack-lg" style={{ paddingTop: 56 }}>
       <section>
         <Link href="/" className="small muted">
           ← all feeds
@@ -113,29 +122,28 @@ export default function FeedPage({
           style={{
             display: "flex",
             alignItems: "baseline",
-            gap: 16,
+            gap: 14,
             flexWrap: "wrap",
             margin: "14px 0 26px",
           }}
         >
-          <h1 className="d1" style={{ fontSize: "clamp(44px,8vw,86px)" }}>
+          <h1 className="d1" style={{ fontSize: "clamp(38px,6vw,64px)" }}>
             {q.ticker}
           </h1>
           <span className="muted" style={{ fontSize: 16 }}>
             {d.instrument.name}
           </span>
-          <Tag onDark>{d.readable.session}</Tag>
-          <Tag onDark>{d.readable.provenance}</Tag>
+          <Tag box>{d.readable.session}</Tag>
+          <Tag box>{d.readable.provenance}</Tag>
         </div>
 
-        <div className={`card fill-${fill}`} style={{ padding: 30 }}>
-          <Glyph kind="rings" />
+        <div className="card" style={{ padding: 30 }}>
           <div
             style={{
               display: "flex",
-              gap: 44,
+              gap: 48,
               flexWrap: "wrap",
-              marginBottom: 24,
+              marginBottom: 26,
             }}
           >
             <div>
@@ -144,50 +152,64 @@ export default function FeedPage({
             </div>
             <div>
               <div className="stat-k">Confidence</div>
-              <div className="stat-n">{d.readable.confidencePct}</div>
+              <div className={`stat-n ${bandClass(q.confidenceBps)}`}>
+                {d.readable.confidencePct}
+              </div>
             </div>
-            <div style={{ minWidth: 220, flex: 1 }}>
+            <div style={{ minWidth: 240, flex: 1 }}>
               <div className="stat-k">Assume this range</div>
-              <div className="stat-n" style={{ fontSize: 22 }}>
+              <div className="stat-n" style={{ fontSize: 24 }}>
                 ${d.readable.band[0].toFixed(2)} — $
                 {d.readable.band[1].toFixed(2)}
               </div>
+              <div className="stat-s">{bandVerdict(q.confidenceBps)}</div>
             </div>
           </div>
 
-          <Band bps={q.confidenceBps} />
+          <Band bps={q.confidenceBps} width={320} label />
 
-          <p style={{ marginTop: 20, marginBottom: 0, fontSize: 13.5 }}>
-            <strong>How this number was reached.</strong> {q.method}
+          <p
+            style={{
+              marginTop: 22,
+              marginBottom: 0,
+              fontSize: 14,
+              color: "var(--ink-2)",
+              maxWidth: "76ch",
+            }}
+          >
+            <strong style={{ color: "var(--ink)" }}>
+              How this number was reached.
+            </strong>{" "}
+            {q.method}
           </p>
         </div>
       </section>
 
-      <section className="grid g4">
-        <div className="card">
+      <section className="stats">
+        <div>
           <div className="stat-k">Anchor, on tape</div>
           <div className="stat-n">${q.anchorPrice.toFixed(2)}</div>
           <div className="stat-s">last observed close</div>
         </div>
-        <div className="card">
+        <div>
           <div className="stat-k">Drift applied</div>
           <div className="stat-n">
             {q.driftBps === 0
               ? "none"
               : `${q.driftBps > 0 ? "+" : ""}${q.driftBps.toFixed(1)}`}
-            {q.driftBps === 0 ? "" : <span style={{ fontSize: 18 }}>bps</span>}
+            {q.driftBps === 0 ? "" : <span style={{ fontSize: 17 }}>bps</span>}
           </div>
           <div className="stat-s">
             fitted β {d.calibration.beta.toFixed(3)} · R²{" "}
             {d.calibration.r2.toFixed(2)}
           </div>
         </div>
-        <div className="card">
+        <div>
           <div className="stat-k">Last print</div>
           <div className="stat-n">{d.readable.staleness}</div>
           <div className="stat-s">ago</div>
         </div>
-        <div className="card">
+        <div>
           <div className="stat-k">{d.readable.nextSession} in</div>
           <div className="stat-n">{d.readable.opensIn}</div>
           <div className="stat-s">next session change</div>
@@ -195,15 +217,14 @@ export default function FeedPage({
       </section>
 
       <section>
-        <h2 className="d2" style={{ marginBottom: 16 }}>
-          Sources and calibration
-        </h2>
+        <div className="sec-head">
+          <h2 className="d2">Sources and calibration</h2>
+          <span className="sec-rule" />
+        </div>
         <div className="grid g2">
           <div className="card">
-            <div className="card-head">
-              <span className="card-title">
-                Providers that resolved ({q.sourceCount})
-              </span>
+            <div className="card-title">
+              Providers that resolved ({q.sourceCount})
             </div>
             {d.sources.map((s) => (
               <div
@@ -211,35 +232,41 @@ export default function FeedPage({
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
-                  padding: "8px 0",
-                  borderBottom: "1px solid var(--line-soft)",
+                  padding: "9px 0",
+                  borderBottom: "1px solid var(--line-2)",
+                  fontSize: 13.5,
                 }}
               >
                 <span>{s.source}</span>
-                <span className="muted">${s.price.toFixed(4)}</span>
+                <span className="mono muted">${s.price.toFixed(4)}</span>
               </div>
             ))}
-            <div className="stat-s" style={{ marginTop: 12 }}>
+            <div className="stat-s" style={{ marginTop: 14 }}>
               dispersion {q.maxDeviationBps.toFixed(2)} bps
             </div>
           </div>
 
           <div className="card">
-            <div className="card-head">
-              <span className="card-title">Fitted on real gaps</span>
-            </div>
+            <div className="card-title">Fitted on real gaps</div>
             <div className="grid g2" style={{ gap: 10 }}>
               <div>
                 <div className="stat-k">Beta</div>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>
+                <div className="mono" style={{ fontSize: 22, fontWeight: 600 }}>
                   {d.calibration.beta.toFixed(3)}
                 </div>
-                <div className="stat-s">prior was {d.calibration.priorBeta}</div>
+                <div className="stat-s">
+                  prior was {d.calibration.priorBeta}
+                </div>
               </div>
               <div>
                 <div className="stat-k">Coverage</div>
                 <div
-                  style={{ fontSize: 20, fontWeight: 700, color: "var(--mint)" }}
+                  className="mono"
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 600,
+                    color: "var(--q-tight)",
+                  }}
                 >
                   {d.calibration.coveragePct?.toFixed(1)}%
                 </div>
@@ -251,16 +278,15 @@ export default function FeedPage({
       </section>
 
       <section>
-        <h2 className="d2" style={{ marginBottom: 16 }}>
-          Signed payload
-        </h2>
+        <div className="sec-head">
+          <h2 className="d2">Signed payload</h2>
+          <span className="sec-rule" />
+        </div>
         <div className="card">
-          <div className="card-head">
-            <span className="card-title">
-              price and band signed by the same key
-            </span>
+          <div className="card-title">
+            price and band signed by the same key
           </div>
-          <div style={{ fontSize: 12 }}>
+          <div className="mono" style={{ fontSize: 12 }}>
             {(
               [
                 ["signer", d.signer],
@@ -270,18 +296,11 @@ export default function FeedPage({
                 ["publishTime", String(q.publishTime)],
               ] as const
             ).map(([k, v]) => (
-              <div
-                key={k}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "130px 1fr",
-                  gap: 12,
-                  padding: "7px 0",
-                  borderBottom: "1px solid var(--line-soft)",
-                }}
-              >
+              <div key={k} style={kvRow}>
                 <span className="muted">{k}</span>
-                <span style={{ wordBreak: "break-all" }}>{v}</span>
+                <span style={{ wordBreak: "break-all", color: "var(--ink)" }}>
+                  {v}
+                </span>
               </div>
             ))}
           </div>

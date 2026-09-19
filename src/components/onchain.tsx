@@ -1,6 +1,6 @@
 "use client";
 
-import { Glyph, Tag } from "./ui";
+import { Tag } from "./ui";
 
 /** Live deployment panel. Renders nothing when no contract is configured. */
 export function OnChainPanel() {
@@ -13,31 +13,26 @@ export function OnChainPanel() {
 
   return (
     <section>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: 14,
-          flexWrap: "wrap",
-          marginBottom: 18,
-        }}
-      >
+      <div className="sec-head">
         <h2 className="d2">Live on-chain</h2>
-        <Tag live onDark>
-          deployed
-        </Tag>
+        <span className="sec-rule" />
+        <span className="sec-note">
+          <Tag live box>
+            deployed
+          </Tag>
+        </span>
       </div>
 
       <div className="grid g2">
-        <div className="card fill-mint">
-          <Glyph kind="bolt" />
-          <div className="stat-k">Contract</div>
+        <div className="card">
+          <div className="card-title">Contract</div>
           <div
+            className="mono"
             style={{
               fontSize: 13,
               wordBreak: "break-all",
-              fontWeight: 600,
-              lineHeight: 1.5,
+              lineHeight: 1.6,
+              color: "var(--ink)",
             }}
           >
             {address}
@@ -49,8 +44,8 @@ export function OnChainPanel() {
         </div>
 
         <div className="card">
-          <div className="stat-k">Verify it yourself</div>
-          <pre style={{ margin: 0, fontSize: 11 }}>
+          <div className="card-title">Verify it yourself</div>
+          <pre style={{ margin: 0, fontSize: 11.5, border: "none", padding: 0, background: "none" }}>
             <span className="c"># a liquidation path, tape shut</span>
             {"\n"}cast call {address.slice(0, 10)}… \{"\n"}
             {"  "}&quot;getPriceIfTraded(string,uint64)&quot; \{"\n"}

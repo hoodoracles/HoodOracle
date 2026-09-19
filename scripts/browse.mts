@@ -27,7 +27,7 @@ const CHECKS: Check[] = [
     name: "dashboard",
     expect: ["hoodoracle", "HOOD", "DERIVED", "error bar", "coverage"],
     // Wait for a real ticker row, not the loading placeholder.
-    waitFor: ".feed-card .feed-sym",
+    waitFor: ".board tbody .row-link",
     full: true,
   },
   { path: "/why", name: "why", expect: ["dark", "session"], full: true },

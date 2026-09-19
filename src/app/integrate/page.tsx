@@ -8,7 +8,7 @@ export default function Integrate() {
   return (
     <div className="prose" style={{ paddingTop: 50 }}>
       <div className="eyebrow">Integration</div>
-      <h1 className="d1" style={{ fontSize: "clamp(40px,7vw,78px)", margin: "18px 0 26px" }}>Integrate</h1>
+      <h1 className="d1" style={{ margin: "18px 0 26px" }}>Integrate</h1>
 
       <p>
         Quotes are signed off-chain and posted on demand. Anyone may relay a

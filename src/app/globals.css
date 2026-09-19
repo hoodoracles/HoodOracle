@@ -1,80 +1,73 @@
 /*
  * hoodoracle design system
  * ────────────────────────
- * Drawn from two references.
+ * This is market-data infrastructure. It is read by risk engineers, quants and
+ * the people who decide whether to route settlement through it. The register is
+ * a research desk, not a launch page.
  *
- * DIA (diadata.org) — the register of a serious oracle: a near-black ground,
- * one restrained accent, a sans paired with its own monospace sibling, and a
- * type scale that is not shy (h1 at 64px, display at 120px).
+ * Three rules hold the whole thing together:
  *
- * Moonshot Pirates — the confidence: a WARM dark ground with grain rather than
- * a cold blue-black, enormous display weight, chunky 20px-radius cards filled
- * with flat colour, decorative shapes bleeding inside them, and graphic chips
- * set inline in the headline.
+ *   1. Paper, not screen. A warm near-white ground with near-black ink. Light
+ *      is what a document looks like, and this product's claim is documentary —
+ *      betas fitted on 3,990 gaps, coverage measured. Dark reads as a demo.
  *
- * The synthesis is specific to this product: the card fills are not decoration,
- * they encode how wide the confidence band is. Mint is tight enough to lean on,
- * cream is ordinary, amber says size down, coral says do not settle. The colour
- * tells you how much to trust the number before you have read it.
+ *   2. One accent. A deep ink blue, for links, the primary action, and nothing
+ *      else. Colour that appears everywhere stops meaning anything.
+ *
+ *   3. Colour is reserved for the confidence band. Four muted tones — and they
+ *      are allowed to tint only the band drawing and its number, never a card,
+ *      never a background. When a row goes red it is because that band is too
+ *      wide to settle against, and nothing else on the page competes with it.
+ *
+ * Numbers are tabular everywhere. Data is set in mono because a price is a
+ * measurement; prose is set in Inter; headings are set in a serif because the
+ * argument this product makes is a statistical one and serif is the voice
+ * statistics are published in.
  */
 
 /* ============================================================== tokens */
 
 :root {
-  /* Warm near-black. Moonshot's ground is brown-charcoal, not blue-black —
-     that warmth is most of why their page feels inviting rather than clinical. */
-  --ground: #1c1817;
-  --ground-2: #252020;
-  --surface: #2b2524;
-  --surface-2: #332c2a;
-  --line: #3d3532;
-  --line-soft: rgba(255, 255, 255, 0.07);
+  color-scheme: light;
 
-  --text: #f7f3ef;
-  --text-2: #c2b8b2;
-  --text-3: #8e827c;
+  /* Ground. Warm paper — a dead #ffffff page reads clinical and shows every
+     seam between sections. */
+  --paper: #fbfaf8;
+  --surface: #ffffff;
+  --surface-2: #f5f3ef;
+  --surface-3: #edeae4;
 
-  /* Brand. One violet, used sparingly, the way DIA uses its single green. */
-  --violet: #7b5cff;
-  --violet-2: #9a82ff;
-  --violet-ink: #1a0f4d;
-  --violet-dim: rgba(123, 92, 255, 0.16);
+  --ink: #16161a;
+  --ink-2: #4a4a53;
+  --ink-3: #75757f;
+  --ink-4: #a0a0aa;
 
-  /* Semantic fills, keyed to band width. */
-  --mint: #a4e5c1; /* tight band, or an open session */
-  --mint-ink: #123024;
-  --cream: #f6e7d2; /* ordinary band */
-  --cream-ink: #2e2416;
-  --amber: #f2b750; /* wide, size down */
-  --amber-ink: #3a2706;
-  --coral: #ff8f7e; /* very wide, do not settle */
-  --coral-ink: #45150e;
+  --line: #e3dfd8;
+  --line-2: #eeebe5;
 
-  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  /* The single accent. */
+  --accent: #1b3f60;
+  --accent-2: #12304b;
+  --accent-soft: #eef2f6;
+  --accent-line: #cdd9e4;
+
+  /* Band severity. Muted on purpose: these tint a 90px drawing and a number,
+     never a surface. */
+  --q-tight: #1a6b4a;
+  --q-ok: #4a4a53;
+  --q-wide: #8a6208;
+  --q-vwide: #a3372c;
+
+  --display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --r: 20px;
-  --r-sm: 12px;
-  --r-xs: 8px;
-  --r-pill: 999px;
+  --r: 8px;
+  --r-sm: 6px;
+  --r-xs: 4px;
 
-  --gutter: 20px;
-  --maxw: 1240px;
-}
-
-:root[data-theme="light"] {
-  --ground: #f4efe9;
-  --ground-2: #ebe4dc;
-  --surface: #ffffff;
-  --surface-2: #f7f2ec;
-  --line: #ddd2c7;
-  --line-soft: rgba(28, 24, 23, 0.08);
-  --text: #1c1817;
-  --text-2: #4e4643;
-  --text-3: #7d716c;
-  --violet: #5a3bef;
-  --violet-2: #4a2fd8;
-  --violet-dim: rgba(90, 59, 239, 0.12);
+  --gutter: 24px;
+  --maxw: 1180px;
 }
 
 * {
@@ -87,16 +80,14 @@ body {
 }
 
 body {
-  background-color: var(--ground);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 14px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "tnum" 1;
-  /* Grain. Moonshot's ground has a fine noise that keeps a flat dark field from
-     looking like dead pixels. Cheap to draw, does a lot of work. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "tnum" 1, "cv05" 1;
 }
 
 /* ========================================================== typography */
@@ -107,110 +98,66 @@ h3,
 h4 {
   font-family: var(--display);
   margin: 0;
-  letter-spacing: -0.035em;
-  line-height: 0.95;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.12;
+  color: var(--ink);
   text-wrap: balance;
 }
 
 .d1 {
-  font-size: clamp(44px, 9vw, 116px);
-  font-weight: 800;
+  font-size: clamp(36px, 5.2vw, 62px);
+  line-height: 1.06;
+  letter-spacing: -0.022em;
 }
 .d2 {
-  font-size: clamp(32px, 5.4vw, 62px);
-  font-weight: 700;
+  font-size: clamp(26px, 3.2vw, 36px);
+  letter-spacing: -0.018em;
 }
 .d3 {
-  font-size: clamp(24px, 3.4vw, 38px);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-size: clamp(20px, 2.2vw, 26px);
+  letter-spacing: -0.014em;
 }
 
 a {
-  color: var(--violet-2);
+  color: var(--accent);
   text-decoration: none;
 }
 a:hover {
   text-decoration: underline;
+  text-underline-offset: 2px;
 }
 :focus-visible {
-  outline: 2px solid var(--violet-2);
-  outline-offset: 3px;
-  border-radius: 4px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
+/* The label that sits above a heading. Mono, because it is a category, not
+   a sentence. */
 .eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.2em;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--ink-3);
   font-weight: 500;
 }
 .lede {
-  font-size: 16px;
-  color: var(--text-2);
-  max-width: 62ch;
-  line-height: 1.65;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 60ch;
 }
 .muted {
-  color: var(--text-3);
+  color: var(--ink-3);
 }
 .small {
-  font-size: 12px;
+  font-size: 12.5px;
 }
-
-/* =============================================================== chips */
-/* Moonshot sets graphic blocks inline inside the headline. Ours carries an
-   error bar, because that is what this product actually sells. */
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--r-sm);
-  vertical-align: middle;
-  padding: 0.06em 0.34em;
-  margin: 0 0.12em;
-  line-height: 1;
-}
-.chip-violet {
-  background: var(--violet);
-  color: #fff;
-}
-.chip-mint {
-  background: var(--mint);
-  color: var(--mint-ink);
-}
-.chip-cream {
-  background: var(--cream);
-  color: var(--cream-ink);
-}
-
-.chip-band {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.18em;
-  padding: 0.14em 0.42em;
-}
-.chip-band i {
-  display: block;
-  background: currentColor;
-  border-radius: 2px;
-}
-.chip-band .cap {
-  width: 0.09em;
-  height: 0.52em;
-}
-.chip-band .bar {
-  width: 0.7em;
-  height: 0.14em;
-  opacity: 0.55;
-}
-.chip-band .dot {
-  width: 0.17em;
-  height: 0.17em;
-  border-radius: 50%;
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ============================================================== layout */
@@ -221,70 +168,113 @@ a:hover {
   padding-inline: var(--gutter);
 }
 main {
-  padding-block: 0 96px;
+  padding-block: 0 88px;
 }
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 .stack-lg {
   display: flex;
   flex-direction: column;
-  gap: 56px;
+  gap: 64px;
+}
+
+/* A section heading with a rule running to the right of it — the fact-sheet
+   device that separates blocks without boxing them. */
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.sec-head h2 {
+  flex: none;
+}
+.sec-head .sec-rule {
+  flex: 1 1 24px;
+  min-width: 24px;
+  height: 1px;
+  background: var(--line);
+  transform: translateY(-3px);
+}
+/* Allowed to shrink and wrap. Pinned at its content width it was the one thing
+   on the page that pushed the document wider than a phone. */
+.sec-head .sec-note {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
 }
 
 /* ================================================================= nav */
 
 .nav {
   position: sticky;
-  top: env(safe-area-inset-top, 0px);
+  top: 0;
   z-index: 60;
-  background: color-mix(in srgb, var(--ground) 88%, transparent);
-  backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--line);
 }
 .nav-in {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 64px;
+  height: 60px;
 }
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 19px;
-  letter-spacing: -0.045em;
-  color: var(--text);
-  margin-right: 14px;
+  gap: 9px;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-right: 20px;
 }
 .brand:hover {
   text-decoration: none;
 }
+/* The mark is the product: a point with an interval either side of it. */
 .brand-mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background: var(--violet);
+  width: 22px;
+  height: 22px;
+  flex: none;
   display: grid;
   place-items: center;
-  flex: none;
+  position: relative;
 }
-/* The mark is an error bar: two caps and a point. Same idea as the headline
-   chip, at favicon scale. */
 .brand-mark i {
   display: block;
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow:
-    -7px 0 0 -1.5px rgba(255, 255, 255, 0.95),
-    7px 0 0 -1.5px rgba(255, 255, 255, 0.95);
+  background: var(--accent);
 }
+.brand-mark::before,
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 1.5px;
+  background: var(--accent);
+  opacity: 0.55;
+}
+.brand-mark::before {
+  left: 2px;
+}
+.brand-mark::after {
+  right: 2px;
+}
+
 .nav-links {
   display: flex;
   gap: 2px;
@@ -292,14 +282,15 @@ main {
   flex-wrap: wrap;
 }
 .nav-link {
-  color: var(--text-2);
-  padding: 7px 12px;
-  border-radius: var(--r-pill);
-  font-size: 13px;
+  color: var(--ink-2);
+  padding: 6px 11px;
+  border-radius: var(--r-sm);
+  font-size: 13.5px;
+  font-weight: 450;
 }
 .nav-link:hover {
-  color: var(--text);
-  background: var(--surface);
+  color: var(--ink);
+  background: var(--surface-3);
   text-decoration: none;
 }
 
@@ -309,38 +300,37 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
-  border-radius: var(--r-pill);
+  padding: 10px 17px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--line);
   background: var(--surface);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13.5px;
   font-weight: 500;
   cursor: pointer;
   transition:
-    transform 0.12s ease,
-    background 0.12s;
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
 .btn:hover {
   background: var(--surface-2);
+  border-color: var(--ink-4);
   text-decoration: none;
-  transform: translateY(-1px);
 }
 .btn-primary {
-  background: var(--violet);
-  border-color: var(--violet);
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
-  font-weight: 600;
 }
 .btn-primary:hover {
-  background: var(--violet-2);
-  border-color: var(--violet-2);
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: #fff;
 }
-@media (prefers-reduced-motion: reduce) {
-  .btn:hover {
-    transform: none;
-  }
+.btn-sm {
+  padding: 7px 12px;
+  font-size: 12.5px;
 }
 
 /* =============================================================== cards */
@@ -349,85 +339,27 @@ main {
   border-radius: var(--r);
   background: var(--surface);
   border: 1px solid var(--line);
-  padding: 22px;
-  position: relative;
-  overflow: hidden;
+  padding: 20px;
 }
+.card-title {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 14px;
+}
+/* A card title with something pushed to the right of it — a status, a copy
+   button. The margin moves from the title to the row. */
 .card-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
-.card-title {
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-
-/* Filled cards. The fill is the meaning, not decoration. */
-.fill-cream {
-  background: var(--cream);
-  border-color: transparent;
-  color: var(--cream-ink);
-}
-.fill-mint {
-  background: var(--mint);
-  border-color: transparent;
-  color: var(--mint-ink);
-}
-.fill-amber {
-  background: var(--amber);
-  border-color: transparent;
-  color: var(--amber-ink);
-}
-.fill-coral {
-  background: var(--coral);
-  border-color: transparent;
-  color: var(--coral-ink);
-}
-.fill-violet {
-  background: var(--violet);
-  border-color: transparent;
-  color: #fff;
-}
-.fill-cream .card-title,
-.fill-mint .card-title,
-.fill-amber .card-title,
-.fill-coral .card-title {
-  color: inherit;
-  opacity: 0.62;
-}
-.fill-violet .card-title {
-  color: #fff;
-  opacity: 0.66;
-}
-
-/* A decorative mark bleeding out of the corner, as Moonshot does. */
-/* A mark bleeding out of the corner, as the reference does. Kept small and
-   faint, and anchored to the corner rather than the middle, so it never sits
-   behind a figure someone has to read. */
-.card-glyph {
-  position: absolute;
-  right: -26px;
-  bottom: -30px;
-  width: 120px;
-  height: 120px;
-  opacity: 0.09;
-  pointer-events: none;
-}
-.fill-violet .card-glyph {
-  opacity: 0.16;
-}
-.card > * {
-  position: relative;
-}
-.card > .card-glyph {
-  position: absolute;
+.card-head .card-title {
+  margin-bottom: 0;
 }
 
 .grid {
@@ -444,119 +376,251 @@ main {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-/* ================================================= feed cards + bands */
+/* =============================================================== hero */
 
-.feed-card {
+/* Two columns: the argument on the left, a live response on the right. The
+   claim is that this oracle returns things other oracles do not, so the
+   fastest way to make it is to show one. */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  gap: 56px;
+  align-items: start;
+}
+.hero-card {
+  border: 1px solid var(--line);
   border-radius: var(--r);
+  background: var(--surface);
   padding: 22px;
-  min-height: 236px;
-  border: 1px solid transparent;
+}
+.hero-quote {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.14s ease;
-}
-a.feed-card:hover {
-  text-decoration: none;
-  transform: translateY(-3px);
-}
-@media (prefers-reduced-motion: reduce) {
-  a.feed-card:hover {
-    transform: none;
-  }
-}
-
-.feed-top {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-.feed-sym {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 26px;
-  letter-spacing: -0.035em;
-  line-height: 1;
-}
-.feed-name {
-  font-size: 11px;
-  opacity: 0.62;
-  margin-top: 4px;
-}
-.feed-px {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: clamp(30px, 4.4vw, 42px);
-  letter-spacing: -0.04em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.feed-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 11px;
-  opacity: 0.66;
+  gap: 36px;
   flex-wrap: wrap;
-  padding-top: 12px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  margin-top: auto;
+  margin-bottom: 18px;
 }
 
-/* The interval, drawn to scale. The number sits beside the drawing rather than
-   on top of it: centred over the bar it collided with the mid-line and became
-   unreadable on a filled card. */
+/* ============================================================== stats */
+
+/* The fact-sheet strip: four figures divided by hairlines, no boxes. Boxing
+   each one would make four cards competing for attention; the rule just
+   separates them. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  overflow: hidden;
+}
+.stats > * {
+  padding: 20px 22px;
+  border-left: 1px solid var(--line);
+}
+.stats > *:first-child {
+  border-left: none;
+}
+
+.stat-k {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 10px;
+}
+.stat-n {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(26px, 3vw, 34px);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stat-s {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 7px;
+  line-height: 1.45;
+}
+
+/* ============================================================== board */
+
+/* The feed board is a table, because that is what a price board is. Eight
+   coloured tiles were decoration; a table is the thing a desk reads. */
+.board {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  /* The table has a min-width, so on a narrow screen the board scrolls rather
+     than the document. Without this the page itself overflows sideways. */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.board table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+.board thead th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  text-align: right;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.board thead th:first-child {
+  text-align: left;
+}
+.board tbody tr {
+  position: relative;
+  border-bottom: 1px solid var(--line-2);
+}
+.board tbody tr:last-child {
+  border-bottom: none;
+}
+.board tbody tr:hover {
+  background: var(--surface-2);
+}
+.board td {
+  padding: 14px 16px;
+  text-align: right;
+  vertical-align: middle;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.board td:first-child {
+  text-align: left;
+}
+
+/* The ticker cell carries the row's link, stretched over the whole row. A real
+   anchor, so it is keyboard reachable and opens in a new tab like any link —
+   an onClick handler on the row would be neither. */
+.row-link {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.row-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.row-link:hover {
+  text-decoration: none;
+}
+.board tbody tr:hover .row-link {
+  color: var(--accent);
+}
+.row-name {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  margin-top: 2px;
+  letter-spacing: 0;
+}
+.px {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* ================================================== the interval itself */
+
+/* Drawn to scale, on a square root: linear against the 15% publish ceiling
+   made every realistic band an identical sliver, which defeats drawing it.
+   Tinted by severity via currentColor — the band and its number are the only
+   coloured things on the page. */
 .band-wrap {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
+  justify-content: flex-end;
 }
 .band {
   --pct: 20%;
   position: relative;
-  flex: 1;
-  height: 22px;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.1);
+  width: 96px;
+  height: 16px;
+  flex: none;
+}
+.band-full {
+  display: flex;
+  width: 100%;
+}
+.band-full .band {
+  flex: 1 1 auto;
+  width: auto;
+}
+.band-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--line);
 }
 .band-fill {
   position: absolute;
-  top: 7px;
-  bottom: 7px;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
   left: calc(50% - var(--pct));
   width: calc(var(--pct) * 2);
   background: currentColor;
-  opacity: 0.42;
-  border-radius: 3px;
+  opacity: 0.3;
+  border-radius: 2px;
 }
 .band-edge {
   position: absolute;
-  top: 2px;
-  bottom: 2px;
-  width: 2.5px;
-  border-radius: 2px;
+  top: 1px;
+  bottom: 1px;
+  width: 1.5px;
   background: currentColor;
-  opacity: 0.85;
+  opacity: 0.75;
 }
 .band-mid {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 3px;
+  bottom: 3px;
   left: 50%;
-  width: 3px;
+  width: 1.5px;
   transform: translateX(-50%);
-  border-radius: 2px;
   background: currentColor;
 }
 .band-num {
+  font-family: var(--mono);
   font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  min-width: 62px;
+  min-width: 58px;
   text-align: right;
+}
+
+.q-tight {
+  color: var(--q-tight);
+}
+.q-ok {
+  color: var(--q-ok);
+}
+.q-wide {
+  color: var(--q-wide);
+}
+.q-vwide {
+  color: var(--q-vwide);
 }
 
 /* ================================================================ tag */
@@ -565,28 +629,29 @@ a.feed-card:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 11px;
-  border-radius: var(--r-pill);
-  font-size: 10.5px;
-  font-weight: 700;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
-  background: rgba(0, 0, 0, 0.14);
+  color: var(--ink-3);
 }
-.tag-on-dark {
-  background: var(--surface-2);
-  color: var(--text-2);
+.tag-box {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  background: var(--surface);
 }
 .dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: currentColor;
   flex: none;
 }
 .pulse {
-  animation: pulse 2.2s ease-in-out infinite;
+  animation: pulse 2.4s ease-in-out infinite;
 }
 @keyframes pulse {
   0%,
@@ -594,7 +659,7 @@ a.feed-card:hover {
     opacity: 1;
   }
   50% {
-    opacity: 0.32;
+    opacity: 0.3;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -603,87 +668,90 @@ a.feed-card:hover {
   }
 }
 
-/* ============================================================== stats */
+/* ============================================================== panel */
 
-.stat-n {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: clamp(30px, 4.6vw, 46px);
-  letter-spacing: -0.04em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
+/* The one tinted surface on the site, for the calibration argument. */
+.panel {
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r);
+  background: var(--accent-soft);
+  padding: 32px;
 }
-.stat-k {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  opacity: 0.66;
-  margin-bottom: 12px;
+.panel-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
 }
-.stat-s {
-  font-size: 12px;
-  opacity: 0.66;
-  margin-top: 8px;
+.panel-figs {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.panel-figs > * {
+  border-top: 1px solid var(--accent-line);
+  padding-top: 16px;
 }
 
 /* =============================================================== prose */
 
 .prose {
-  max-width: 74ch;
+  max-width: 72ch;
 }
 .prose h2 {
-  font-size: clamp(26px, 3.6vw, 38px);
-  margin: 46px 0 14px;
+  font-size: clamp(24px, 3vw, 32px);
+  margin: 48px 0 14px;
 }
 .prose h3 {
   font-size: 19px;
   margin: 32px 0 10px;
-  letter-spacing: -0.02em;
 }
 .prose p {
-  color: var(--text-2);
-  margin: 0 0 14px;
-  font-size: 14.5px;
-  line-height: 1.7;
+  color: var(--ink-2);
+  margin: 0 0 15px;
+  font-size: 15.5px;
+  line-height: 1.68;
 }
 .prose ul,
 .prose ol {
-  color: var(--text-2);
+  color: var(--ink-2);
   padding-left: 20px;
-  margin: 0 0 14px;
-  font-size: 14.5px;
+  margin: 0 0 15px;
+  font-size: 15.5px;
 }
 .prose li {
   margin-bottom: 7px;
 }
 .prose strong {
-  color: var(--text);
-  font-weight: 700;
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .tbl {
   overflow-x: auto;
-  border-radius: var(--r-sm);
+  border-radius: var(--r);
   border: 1px solid var(--line);
-  margin: 20px 0;
+  background: var(--surface);
+  margin: 22px 0;
 }
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: 13px;
   min-width: 520px;
 }
 th {
   text-align: right;
-  padding: 11px 13px;
+  padding: 11px 14px;
+  font-family: var(--mono);
   font-size: 10px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: var(--text-3);
-  font-weight: 600;
+  color: var(--ink-3);
+  font-weight: 500;
   border-bottom: 1px solid var(--line);
   white-space: nowrap;
-  background: var(--ground-2);
+  background: var(--surface-2);
 }
 th:first-child,
 td:first-child {
@@ -691,109 +759,141 @@ td:first-child {
 }
 td {
   text-align: right;
-  padding: 11px 13px;
-  border-bottom: 1px solid var(--line-soft);
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line-2);
   font-variant-numeric: tabular-nums;
-  color: var(--text-2);
+  color: var(--ink-2);
 }
 tbody tr:last-child td {
   border-bottom: none;
 }
-tbody tr:hover td {
-  background: var(--ground-2);
-}
 td.sym {
-  color: var(--text);
-  font-weight: 700;
+  color: var(--ink);
+  font-weight: 600;
+  font-family: var(--mono);
 }
 .ok {
-  color: var(--mint);
+  color: var(--q-tight);
 }
 .warn {
-  color: var(--amber);
+  color: var(--q-wide);
 }
 .bad {
-  color: var(--coral);
+  color: var(--q-vwide);
 }
 
+/* Code stays on paper. A dark block in a light document is a hole in it. */
 pre {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.7;
-  background: #141110;
+  background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: var(--r-sm);
+  border-radius: var(--r);
   padding: 18px;
   overflow-x: auto;
-  margin: 18px 0;
-  color: var(--text-2);
-}
-:root[data-theme="light"] pre {
-  background: var(--ground-2);
+  margin: 20px 0;
+  color: var(--ink-2);
+  tab-size: 2;
 }
 pre .c {
-  color: var(--text-3);
+  color: var(--ink-4);
 }
 pre .g {
-  color: var(--mint);
+  color: var(--q-tight);
 }
 pre .v {
-  color: var(--violet-2);
+  color: var(--accent);
 }
 code {
   font-family: var(--mono);
   font-size: 0.88em;
-  background: var(--surface);
+  background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 2px 6px;
-  color: var(--violet-2);
+  border-radius: var(--r-xs);
+  padding: 1px 5px;
+  color: var(--ink);
 }
-.fill-cream code,
-.fill-mint code,
-.fill-amber code {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.14);
-  color: inherit;
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
 }
 
 .note {
   border-radius: var(--r-sm);
-  padding: 16px 18px;
-  margin: 20px 0;
+  padding: 15px 18px;
+  margin: 22px 0;
   font-size: 14px;
-  background: var(--violet-dim);
-  border-left: 3px solid var(--violet);
-  color: var(--text-2);
+  line-height: 1.6;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-left: 2px solid var(--accent);
+  color: var(--ink-2);
 }
 .note strong {
-  color: var(--text);
+  color: var(--ink);
+  font-weight: 600;
 }
 .note-warn {
-  background: rgba(242, 183, 80, 0.13);
-  border-left-color: var(--amber);
+  background: #fdf8ec;
+  border-color: #eadfc4;
+  border-left-color: var(--q-wide);
+}
+.note code {
+  background: rgba(255, 255, 255, 0.7);
 }
 
 hr.rule {
   border: none;
   border-top: 1px solid var(--line);
-  margin: 34px 0;
+  margin: 36px 0;
 }
 
 /* ============================================================== footer */
 
 .footer {
   border-top: 1px solid var(--line);
+  background: var(--surface);
   margin-top: 80px;
-  padding-block: 32px 52px;
-  color: var(--text-3);
-  font-size: 12px;
-  line-height: 1.8;
+  padding-block: 32px 48px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+.footer strong {
+  color: var(--ink-2);
+  font-weight: 600;
 }
 
 /* ========================================================== responsive */
 
-@media (max-width: 980px) {
+.scroll-x {
+  overflow-x: auto;
+}
+
+@media (max-width: 960px) {
+  .hero,
+  .panel-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .hero-card {
+    position: static;
+  }
+}
+
+@media (max-width: 1000px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stats > *:nth-child(3) {
+    border-left: none;
+  }
+  .stats > *:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
   .g4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -801,7 +901,20 @@ hr.rule {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (max-width: 620px) {
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: 16px;
+  }
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stats > * {
+    border-left: none;
+  }
+  .stats > *:nth-child(n + 2) {
+    border-top: 1px solid var(--line);
+  }
   .g4,
   .g3,
   .g2 {
@@ -809,18 +922,24 @@ hr.rule {
   }
   .nav-in {
     height: auto;
-    padding-block: 12px;
+    padding-block: 10px;
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: 8px;
   }
   .nav-links {
     margin-left: 0;
   }
+  .panel {
+    padding: 22px;
+  }
+  .panel-figs {
+    gap: 26px;
+  }
   main {
-    padding-bottom: 64px;
+    padding-bottom: 60px;
   }
   .stack-lg {
-    gap: 42px;
+    gap: 48px;
   }
 }

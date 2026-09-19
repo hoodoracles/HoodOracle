@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Band,
-  Glyph,
-  Stat,
-  countdown,
-  fillFor,
-  sessionFill,
-} from "@/components/ui";
+import { Band, Stat, Tag, bandClass, countdown } from "@/components/ui";
 import { OnChainPanel } from "@/components/onchain";
 
 interface ApiQuote {
@@ -53,8 +46,6 @@ const NAMES: Record<string, string> = {
   TLT: "20+Y Treasury ETF",
 };
 
-const GLYPHS = ["burst", "bolt", "rings", "wave"] as const;
-
 export default function Dashboard() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,60 +81,115 @@ export default function Dashboard() {
   const modelled =
     data?.quotes.filter((q) => q.provenanceName !== "TRADED").length ?? 0;
   const widest = data?.quotes.reduce((a, q) => Math.max(a, q.confidenceBps), 0);
+  const lead = data?.quotes.find((q) => q.ticker === "HOOD") ?? data?.quotes[0];
 
   return (
-    <div className="stack-lg" style={{ paddingTop: 60 }}>
+    <div className="stack-lg" style={{ paddingTop: 72 }}>
       {/* ───────────────────────────────────────────────────────────── hero */}
-      <section>
-        <div className="eyebrow" style={{ marginBottom: 22 }}>
-          Session-aware oracle · live on Robinhood Chain
+      <section className="hero">
+        <div>
+          <div className="eyebrow" style={{ marginBottom: 20 }}>
+            Session-aware oracle · live on Robinhood Chain
+          </div>
+
+          <h1 className="d1" style={{ marginBottom: 24 }}>
+            Price any equity. Publish the error bar with it.
+          </h1>
+
+          <p className="lede" style={{ marginBottom: 30 }}>
+            Tokenised equities trade around the clock. The shares behind them
+            price for six and a half hours a day. Every oracle in production
+            returns one number and hides which of those two regimes it came
+            from — so a contract cannot tell a live print from a weekend
+            estimate. hoodoracle returns the price, its provenance, and a
+            confidence interval fitted on two years of realised gaps.
+          </p>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link className="btn btn-primary" href="/playground">
+              Try the API
+            </Link>
+            <Link className="btn" href="/why">
+              See the gap
+            </Link>
+            <Link className="btn" href="/integrate">
+              Integrate
+            </Link>
+          </div>
         </div>
 
-        <h1 className="d1" style={{ maxWidth: "13ch", marginBottom: 28 }}>
-          Price any equity.
-          <br />
-          Know the{" "}
-          <span
-            className="chip chip-band"
-            style={{ background: "var(--amber)", color: "var(--amber-ink)" }}
-            aria-hidden="true"
-          >
-            <i className="cap" />
-            <i className="bar" />
-            <i className="dot" />
-            <i className="bar" />
-            <i className="cap" />
-          </span>{" "}
-          <span style={{ color: "var(--amber)" }}>error bar.</span>
-        </h1>
+        {/* The claim, demonstrated. This is the actual response the service is
+            returning right now, not a mock. */}
+        <aside className="hero-card">
+          <div className="card-head">
+            <span className="card-title">
+              GET /api/quote/{lead?.ticker ?? "HOOD"}
+            </span>
+            <span style={{ marginLeft: "auto" }}>
+              <Tag live>live</Tag>
+            </span>
+          </div>
 
-        <p className="lede" style={{ marginBottom: 30 }}>
-          Tokenised equities trade around the clock. The shares behind them price
-          for six and a half hours a day. Every oracle in production returns one
-          number and hides which of those regimes it came from.
-        </p>
+          {lead ? (
+            <>
+              <div className="hero-quote">
+                <div>
+                  <div className="stat-k">price</div>
+                  <div className="stat-n" style={{ fontSize: 30 }}>
+                    ${lead.price.toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <div className="stat-k">95% band</div>
+                  <div
+                    className={`stat-n ${bandClass(lead.confidenceBps)}`}
+                    style={{ fontSize: 30 }}
+                  >
+                    ±{(lead.confidenceBps / 100).toFixed(2)}%
+                  </div>
+                </div>
+              </div>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link className="btn btn-primary" href="/playground">
-            Try the API
-          </Link>
-          <Link className="btn" href="/why">
-            See the gap
-          </Link>
-          <Link className="btn" href="/integrate">
-            Integrate
-          </Link>
-        </div>
+              <Band bps={lead.confidenceBps} full />
+
+              <pre style={{ marginBottom: 0, fontSize: 11.5 }}>
+                <span className="c">
+                  {`// provenance and confidenceBps are the two fields\n`}
+                  {`// no other equity oracle returns\n`}
+                </span>
+                {`{\n`}
+                {`  "price": ${lead.price.toFixed(2)},\n`}
+                {`  "confidenceBps": ${lead.confidenceBps},\n`}
+                {`  "provenance": "${lead.provenanceName}",\n`}
+                {`  "session": "${lead.sessionName}",\n`}
+                {`  "sourceCount": ${lead.sourceCount}\n}`}
+              </pre>
+            </>
+          ) : (
+            <div className="muted small">contacting the service…</div>
+          )}
+        </aside>
       </section>
 
       {/* ────────────────────────────────────────────────────── market state */}
-      <section className="grid g4">
-        <div
-          className={`card fill-${market ? sessionFill(market.session) : "violet"}`}
-        >
-          <Glyph kind="rings" />
+      <section className="stats">
+        <div>
           <div className="stat-k">US market session</div>
-          <div className="stat-n" style={{ fontSize: "clamp(26px,4vw,40px)" }}>
+          <div
+            className="stat-n"
+            style={{ display: "flex", alignItems: "center", gap: 10 }}
+          >
+            {tapeOpen ? (
+              <span
+                className="dot pulse"
+                style={{
+                  width: 8,
+                  height: 8,
+                  color: "var(--q-tight)",
+                  background: "currentColor",
+                }}
+              />
+            ) : null}
             {market?.session ?? "—"}
           </div>
           <div className="stat-s">
@@ -172,20 +218,13 @@ export default function Dashboard() {
         />
       </section>
 
-      {/* ───────────────────────────────────────────────────────────── feeds */}
+      {/* ───────────────────────────────────────────────────────────── board */}
       <section>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: 14,
-            flexWrap: "wrap",
-            marginBottom: 18,
-          }}
-        >
+        <div className="sec-head">
           <h2 className="d2">Live feeds</h2>
+          <span className="sec-rule" />
           {data ? (
-            <span className="muted small">
+            <span className="sec-note">
               read {new Date(data.asOf).toUTCString().replace("GMT", "UTC")} ·
               refreshes every 20s
             </span>
@@ -203,55 +242,66 @@ export default function Dashboard() {
         ) : null}
 
         {error ? (
-          <div className="card fill-coral">
+          <div className="note" style={{ borderLeftColor: "var(--q-vwide)" }}>
             <strong>Could not load feeds.</strong> {error}
           </div>
         ) : null}
 
-        <div className="grid g4">
-          {(data?.quotes ?? []).map((q, i) => (
-            <Link
-              key={q.ticker}
-              href={`/feed/${q.ticker}`}
-              className={`feed-card fill-${fillFor(q.provenanceName, q.confidenceBps)}`}
-            >
-              <Glyph kind={GLYPHS[i % GLYPHS.length]} />
+        <div className="board scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Instrument</th>
+                <th>Last</th>
+                <th>95% confidence band</th>
+                <th>Provenance</th>
+                <th>Session</th>
+                <th>Src</th>
+                <th>Drift</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data?.quotes ?? []).map((q) => (
+                <tr key={q.ticker}>
+                  <td>
+                    <Link className="row-link" href={`/feed/${q.ticker}`}>
+                      {q.ticker}
+                    </Link>
+                    <div className="row-name">{NAMES[q.ticker] ?? ""}</div>
+                  </td>
+                  <td className="px">${q.price.toFixed(2)}</td>
+                  <td>
+                    <Band bps={q.confidenceBps} label />
+                  </td>
+                  <td>{q.provenanceName}</td>
+                  <td>{q.sessionName}</td>
+                  <td>{q.sourceCount}</td>
+                  <td>
+                    {q.driftBps === 0
+                      ? "—"
+                      : `${q.driftBps > 0 ? "+" : ""}${q.driftBps.toFixed(1)}bps`}
+                  </td>
+                  <td>{q.staleness}</td>
+                </tr>
+              ))}
 
-              <div className="feed-top">
-                <div style={{ flex: 1 }}>
-                  <div className="feed-sym">{q.ticker}</div>
-                  <div className="feed-name">{NAMES[q.ticker] ?? ""}</div>
-                </div>
-                <span className="tag">{q.provenanceName}</span>
-              </div>
-
-              <div className="feed-px">${q.price.toFixed(2)}</div>
-
-              <Band bps={q.confidenceBps} label />
-
-              <div className="feed-meta">
-                <span>{q.staleness} ago</span>
-                <span>{q.sourceCount} src</span>
-                <span style={{ marginLeft: "auto" }}>
-                  {q.driftBps === 0
-                    ? "no drift"
-                    : `${q.driftBps > 0 ? "+" : ""}${q.driftBps.toFixed(1)}bps`}
-                </span>
-              </div>
-            </Link>
-          ))}
-
-          {!data && !error
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="card" style={{ height: 210 }}>
-                  <div className="muted small">loading…</div>
-                </div>
-              ))
-            : null}
+              {!data && !error ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    style={{ textAlign: "center", color: "var(--ink-3)" }}
+                  >
+                    loading feeds…
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
 
         {data?.errors.length ? (
-          <div className="card fill-coral" style={{ marginTop: 14 }}>
+          <div className="note" style={{ borderLeftColor: "var(--q-vwide)" }}>
             {data.errors.map((e) => (
               <div key={e.ticker}>
                 <strong>{e.ticker}</strong> {e.error}
@@ -267,30 +317,34 @@ export default function Dashboard() {
       {/* ───────────────────────────────────────────────────────────── proxy */}
       {data?.proxies.length ? (
         <section>
-          <h2 className="d2" style={{ marginBottom: 8 }}>
-            The only markets still open
-          </h2>
-          <p className="lede" style={{ marginBottom: 18 }}>
+          <div className="sec-head">
+            <h2 className="d2">The only markets still open</h2>
+            <span className="sec-rule" />
+          </div>
+          <p className="lede" style={{ marginBottom: 20 }}>
             Crypto is the proxy of last resort. Moves are measured over exactly
-            the window the equity tape has been shut, not scaled from a 24-hour
-            return.
+            the window the equity tape has been shut, not scaled down from a
+            24-hour return.
           </p>
-          <div className="grid g2">
+          <div className="stats" style={{ gridTemplateColumns: "repeat(2,1fr)" }}>
             {data.proxies.map((p) => (
-              <div key={p.key} className="card">
-                <Glyph kind="wave" />
+              <div key={p.key}>
                 <div className="stat-k">{p.key} · since the close</div>
                 <div
                   className="stat-n"
                   style={{
                     color:
-                      p.moveSinceGapPct >= 0 ? "var(--mint)" : "var(--coral)",
+                      p.moveSinceGapPct >= 0
+                        ? "var(--q-tight)"
+                        : "var(--q-vwide)",
                   }}
                 >
                   {p.moveSinceGapPct >= 0 ? "+" : ""}
                   {p.moveSinceGapPct.toFixed(3)}%
                 </div>
-                <div className="stat-s">${p.price.toLocaleString("en-US")}</div>
+                <div className="stat-s">
+                  ${p.price.toLocaleString("en-US")}
+                </div>
               </div>
             ))}
           </div>
@@ -298,36 +352,44 @@ export default function Dashboard() {
       ) : null}
 
       {/* ───────────────────────────────────────────────────────── calibrated */}
-      <section className="card fill-violet" style={{ padding: 32 }}>
-        <Glyph kind="burst" />
-        <div className="eyebrow" style={{ color: "#fff", opacity: 0.66 }}>
-          Why the bands are believable
-        </div>
-        <h2 className="d3" style={{ margin: "14px 0", maxWidth: "20ch" }}>
-          Fitted on 3,990 real gaps, then checked.
-        </h2>
-        <p style={{ maxWidth: "58ch", opacity: 0.88, marginBottom: 24 }}>
-          Every beta and every interval comes from regressing two years of
-          realised close-to-open moves. Coverage is the test that matters: replay
-          each historical gap and count how many landed inside the published
-          band. A 95% interval should catch about 95%.
-        </p>
-        <div style={{ display: "flex", gap: 44, flexWrap: "wrap" }}>
+      <section className="panel">
+        <div className="panel-grid">
           <div>
-            <div className="stat-n">93.4—96.4%</div>
-            <div className="stat-s">observed coverage, all 8 instruments</div>
-          </div>
-          <div>
-            <div className="stat-n">k = 0.107</div>
-            <div className="stat-s">
-              measured time exponent, not the assumed 0.50
+            <div className="eyebrow">Why the bands are believable</div>
+            <h2 className="d2" style={{ margin: "14px 0" }}>
+              Fitted on 3,990 real gaps, then checked against them.
+            </h2>
+            <p style={{ color: "var(--ink-2)", margin: 0 }}>
+              Every beta and every interval comes from regressing two years of
+              realised close-to-open moves. Coverage is the test that matters:
+              replay each historical gap and count how many landed inside the
+              published band. A 95% interval should catch about 95% of them.
+            </p>
+            <div style={{ marginTop: 26 }}>
+              <Link className="btn" href="/why">
+                Read the finding
+              </Link>
             </div>
           </div>
-        </div>
-        <div style={{ marginTop: 26 }}>
-          <Link className="btn" href="/why">
-            Read the finding
-          </Link>
+
+          <div className="panel-figs">
+            <div>
+              <div className="stat-n">93.4—96.4%</div>
+              <div className="stat-s">observed coverage, all 8 instruments</div>
+            </div>
+            <div>
+              <div className="stat-n">k = 0.107</div>
+              <div className="stat-s">
+                measured time exponent, not the assumed 0.50
+              </div>
+            </div>
+            <div>
+              <div className="stat-n">3,990</div>
+              <div className="stat-s">
+                close-to-open gaps in the fitting window
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </div>

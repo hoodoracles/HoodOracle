@@ -338,6 +338,13 @@ Every   5 minutes
 A scheduler only needs to make an authenticated request; it never holds a key.
 The endpoint does, in `RELAYER_KEY`.
 
+> **Do not use Vercel Cron for the real cadence on a Hobby plan.** Hobby rejects
+> any schedule that would fire more than once a day, and it rejects it *at
+> deploy time* — a `vercel.json` asking for `0 */3 * * *` fails the build, so
+> the site silently stops updating while the last good deployment keeps serving.
+> The entry in `vercel.json` here is a once-daily backstop near the US open. An
+> external scheduler drives the five-minute cadence.
+
 **Long-running process.** `npm run publish -- <target> <addr> --watch` does the
 same thing from a machine you control. It is a long-lived process holding a
 funded key, so it belongs on a VM, not in a serverless function.

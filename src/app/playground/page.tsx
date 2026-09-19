@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Band, Tag, useOrigin } from "@/components/ui";
+import { Band, bandClass, useOrigin } from "@/components/ui";
 
 const TICKERS = ["HOOD", "COIN", "NVDA", "TSLA", "AAPL", "MSTR", "SPY", "TLT"];
 
@@ -48,12 +48,12 @@ export default function Playground() {
   const origin = useOrigin();
 
   return (
-    <div className="stack-lg" style={{ paddingTop: 50 }}>
+    <div className="stack-lg" style={{ paddingTop: 56 }}>
       <div>
         <div className="eyebrow" style={{ marginBottom: 18 }}>
           Playground
         </div>
-        <h1 className="d1" style={{ fontSize: "clamp(40px,7vw,78px)", marginBottom: 20 }}>
+        <h1 className="d1" style={{ marginBottom: 20 }}>
           Call the oracle.
         </h1>
         <p className="lede">
@@ -66,70 +66,65 @@ export default function Playground() {
       <section className="card">
         <div className="card-head">
           <span className="card-title">Instrument</span>
-          <span style={{ marginLeft: "auto" }} className="muted small">
-            {status !== null ? `HTTP ${status}` : ""} {ms !== null ? `· ${ms}ms` : ""}
+          <span className="muted small mono" style={{ marginLeft: "auto" }}>
+            {status !== null ? `HTTP ${status}` : ""}
+            {ms !== null ? ` · ${ms}ms` : ""}
           </span>
         </div>
-        <div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {TICKERS.map((t) => (
-              <button
-                key={t}
-                className="btn"
-                onClick={() => setTicker(t)}
-                style={
-                  t === ticker
-                    ? {
-                        background: "var(--violet)",
-                        borderColor: "var(--violet)",
-                        color: "#fff",
-                        fontWeight: 700,
-                      }
-                    : undefined
-                }
-              >
-                {t}
-              </button>
-            ))}
-            <button
-              className="btn btn-primary"
-              onClick={() => void run(ticker)}
-              disabled={busy}
-              style={{ marginLeft: "auto" }}
-            >
-              {busy ? "running…" : "Re-run"}
-            </button>
-          </div>
 
-          <div style={{ marginTop: 14 }}>
-            <pre>
-              <span className="c">$</span> curl {origin}/api/quote/
-              <span className="n">{ticker}</span>
-            </pre>
-          </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {TICKERS.map((t) => (
+            <button
+              key={t}
+              className={`btn btn-sm${t === ticker ? " btn-primary" : ""}`}
+              onClick={() => setTicker(t)}
+              aria-pressed={t === ticker}
+            >
+              {t}
+            </button>
+          ))}
+          <button
+            className="btn btn-sm"
+            onClick={() => void run(ticker)}
+            disabled={busy}
+            style={{ marginLeft: "auto" }}
+          >
+            {busy ? "running…" : "Re-run"}
+          </button>
         </div>
+
+        <pre style={{ marginBottom: 0 }}>
+          <span className="c">$</span> curl {origin}/api/quote/
+          <span className="v">{ticker}</span>
+        </pre>
       </section>
 
       {meta.price !== undefined ? (
-        <section className="grid g4">
-          <div className="card fill-cream">
+        <section className="stats">
+          <div>
             <div className="stat-k">Price</div>
             <div className="stat-n">${meta.price.toFixed(2)}</div>
           </div>
-          <div className="card fill-amber">
+          <div>
             <div className="stat-k">Confidence</div>
-            <div className="stat-n">±{((meta.bps ?? 0) / 100).toFixed(2)}%</div>
-            <div style={{ marginTop: 14 }}>
+            <div className={`stat-n ${bandClass(meta.bps)}`}>
+              ±{((meta.bps ?? 0) / 100).toFixed(2)}%
+            </div>
+            <div style={{ marginTop: 12 }}>
               <Band bps={meta.bps ?? 0} />
             </div>
           </div>
-          <div className="card">
+          <div>
             <div className="stat-k">Provenance</div>
-            <div className="stat-n" style={{ fontSize: 26 }}>{meta.prov}</div>
+            <div className="stat-n" style={{ fontSize: 24 }}>
+              {meta.prov}
+            </div>
           </div>
-          <div className="card">
+          <div>
             <div className="stat-k">Session</div>
-            <div className="stat-n" style={{ fontSize: 26 }}>{meta.session}</div>
+            <div className="stat-n" style={{ fontSize: 24 }}>
+              {meta.session}
+            </div>
           </div>
         </section>
       ) : null}
@@ -138,32 +133,26 @@ export default function Playground() {
         <div className="card-head">
           <span className="card-title">Response</span>
           <button
-            className="btn"
-            style={{ marginLeft: "auto", padding: "4px 10px", fontSize: 11.5 }}
+            className="btn btn-sm"
+            style={{ marginLeft: "auto" }}
             onClick={() => void navigator.clipboard?.writeText(raw)}
           >
             Copy JSON
           </button>
         </div>
-        <div>
-          <pre style={{ maxHeight: 460, overflowY: "auto" }}>
-            {raw || "…"}
-          </pre>
-        </div>
+        <pre style={{ maxHeight: 460, overflowY: "auto", margin: 0 }}>
+          {raw || "…"}
+        </pre>
       </section>
 
       <section className="card">
-        <div className="card-head">
-          <span className="card-title">Other endpoints</span>
-        </div>
-        <div>
-          <pre>
-            <span className="c"># every instrument, one proxy snapshot</span>
-            {`\n`}curl {origin}/api/quotes{`\n\n`}
-            <span className="c"># upstream reachability and signer</span>
-            {`\n`}curl {origin}/api/health
-          </pre>
-        </div>
+        <div className="card-title">Other endpoints</div>
+        <pre style={{ margin: 0 }}>
+          <span className="c"># every instrument, one proxy snapshot</span>
+          {`\n`}curl {origin}/api/quotes{`\n\n`}
+          <span className="c"># upstream reachability and signer</span>
+          {`\n`}curl {origin}/api/health
+        </pre>
       </section>
     </div>
   );

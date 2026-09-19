@@ -21,7 +21,7 @@ export default function Why() {
   return (
     <div className="prose" style={{ paddingTop: 50 }}>
       <div className="eyebrow">The problem</div>
-      <h1 className="d1" style={{ fontSize: "clamp(40px,7vw,78px)", margin: "18px 0 26px" }}>
+      <h1 className="d1" style={{ margin: "18px 0 26px" }}>
         A third of every week has no price.
       </h1>
 
@@ -51,7 +51,7 @@ export default function Why() {
                 {hours}
               </td>
               <td>
-                <span className="tag tag-on-dark">{state}</span>
+                <span className="tag tag-box">{state}</span>
               </td>
               <td className="muted">{meaning}</td>
             </tr>

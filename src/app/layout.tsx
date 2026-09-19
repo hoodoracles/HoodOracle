@@ -31,7 +31,7 @@ export default function RootLayout({
           crossOrigin=""
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
           rel="stylesheet"
         />
       </head>
@@ -61,15 +61,15 @@ export default function RootLayout({
             <div
               style={{
                 display: "flex",
-                gap: 24,
+                gap: 32,
                 flexWrap: "wrap",
                 justifyContent: "space-between",
               }}
             >
               <div style={{ maxWidth: "46ch" }}>
-                <strong style={{ color: "var(--text-2)" }}>hoodoracle</strong> —
-                an independent oracle for tokenised equities. Not affiliated
-                with, endorsed by, or operated by Robinhood Markets, Inc.
+                <strong>hoodoracle</strong> — an independent oracle for
+                tokenised equities. Not affiliated with, endorsed by, or
+                operated by Robinhood Markets, Inc.
               </div>
               <div style={{ textAlign: "right" }}>
                 Evaluation build. Not for settlement.
