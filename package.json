@@ -22,7 +22,8 @@
     "deploy:keeper": "tsx scripts/deploy-keeper.mts",
     "test:keeper": "tsx scripts/keepertest.mts",
     "test:sdk": "tsx scripts/sdktest.mts",
-    "sdk:build": "npm --prefix sdk run build"
+    "sdk:build": "npm --prefix sdk run build",
+    "push": "bash scripts/push.sh"
   },
   "license": "ISC",
   "private": true,
