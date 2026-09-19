@@ -41,6 +41,23 @@ const CHECKS: Check[] = [
   },
   { path: "/integrate", name: "integrate", expect: ["Solidity"], full: true },
   {
+    // Rendered on the server straight from the chain, so a broken RPC shows
+    // up here as missing text rather than as an empty table that still
+    // "renders". The expectations are the load-bearing words on the page.
+    path: "/coverage",
+    name: "coverage",
+    expect: [
+      "Was the band right",
+      "Coverage at reopen",
+      "Backtest",
+      "By instrument",
+      "QuotePosted",
+      "Wilson",
+    ],
+    waitFor: ".board tbody tr",
+    full: true,
+  },
+  {
     path: "/feed/HOOD",
     name: "feed-hood",
     expect: ["HOOD", "Robinhood", "Published price"],
@@ -120,25 +137,31 @@ for (const check of CHECKS) {
   }
 }
 
-// mobile pass on the dashboard
-const m = await ctx.newPage();
-await m.setViewportSize({ width: 390, height: 844 });
-try {
-  await m.goto(BASE + "/", { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await m.waitForTimeout(1500);
-  const scrollW = await m.evaluate(() => document.documentElement.scrollWidth);
-  const clientW = await m.evaluate(() => document.documentElement.clientWidth);
-  await m.screenshot({ path: `${OUT}/mobile.png`, fullPage: true });
-  const overflow = scrollW > clientW + 1;
-  if (overflow) failures++;
-  console.log(
-    `${overflow ? "FAIL" : "PASS"}  mobile 390px  scrollW=${scrollW} clientW=${clientW}`,
-  );
-} catch (e) {
-  failures++;
-  console.log(`FAIL  mobile  ${(e as Error).message.split("\n")[0]}`);
+// mobile pass. A wide table is the usual cause of sideways page scroll, and
+// /coverage adds two of them, so it is checked alongside the dashboard.
+for (const [path, name] of [
+  ["/", "mobile"],
+  ["/coverage", "mobile-coverage"],
+] as const) {
+  const m = await ctx.newPage();
+  await m.setViewportSize({ width: 390, height: 844 });
+  try {
+    await m.goto(BASE + path, { waitUntil: "domcontentloaded", timeout: 30_000 });
+    await m.waitForTimeout(1500);
+    const scrollW = await m.evaluate(() => document.documentElement.scrollWidth);
+    const clientW = await m.evaluate(() => document.documentElement.clientWidth);
+    await m.screenshot({ path: `${OUT}/${name}.png`, fullPage: true });
+    const overflow = scrollW > clientW + 1;
+    if (overflow) failures++;
+    console.log(
+      `${overflow ? "FAIL" : "PASS"}  mobile 390px ${path.padEnd(10)} scrollW=${scrollW} clientW=${clientW}`,
+    );
+  } catch (e) {
+    failures++;
+    console.log(`FAIL  mobile ${path}  ${(e as Error).message.split("\n")[0]}`);
+  }
+  await m.close();
 }
-await m.close();
 
 if (netErrors.length) {
   console.log("\nfailed requests:");

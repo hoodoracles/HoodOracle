@@ -7,7 +7,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://hoodoracle-neon.vercel.app";
   const now = new Date();
 
-  const pages = ["", "/why", "/docs", "/playground", "/integrate"].map((p) => ({
+  const pages = [
+    "",
+    "/why",
+    "/coverage",
+    "/docs",
+    "/playground",
+    "/integrate",
+  ].map((p) => ({
     url: `${base}${p}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
