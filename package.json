@@ -18,7 +18,9 @@
     "state": "tsx scripts/state.mts",
     "brand": "tsx scripts/brand.mts && tsx scripts/ico.mts",
     "ledger": "tsx scripts/ledger.mts",
-    "test:ledger": "tsx scripts/ledgertest.mts"
+    "test:ledger": "tsx scripts/ledgertest.mts",
+    "deploy:keeper": "tsx scripts/deploy-keeper.mts",
+    "test:keeper": "tsx scripts/keepertest.mts"
   },
   "license": "ISC",
   "private": true,

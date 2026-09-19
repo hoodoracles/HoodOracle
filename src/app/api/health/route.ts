@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { privateKeyToAccount } from "viem/accounts";
-import type { Hex } from "viem";
+import { createPublicClient, http, type Hex } from "viem";
 import { isSignerConfigured, signerAddress } from "@/lib/sign";
 import { UNIVERSE } from "@/lib/universe";
 import { classifySession, describeGap, nextSessionChange } from "@/lib/session";
@@ -9,6 +9,7 @@ import { fetchConsensus, ALL_PROVIDERS } from "@/lib/providers";
 import { cacheStats } from "@/lib/cache";
 import { CALIBRATION } from "@/lib/calibration";
 import { lastCall } from "@/lib/lastcall";
+import { HOOD_ORACLE_KEEPER_ABI } from "@/lib/abi";
 
 export const dynamic = "force-dynamic";
 
@@ -143,6 +144,70 @@ async function checkRelayer(rpc: string | undefined) {
   };
 }
 
+/**
+ * Is the batch relay actually on?
+ *
+ * The keeper is optional and its absence is not a fault — without it the
+ * relayer posts one transaction per ticker, which is what it always did. But
+ * "configured" and "working" are different things, and the difference is
+ * invisible from outside: a keeper address pointing at the wrong oracle, or at
+ * nothing at all, answers plausibly right up until it silently posts nowhere.
+ * So this checks that it is wired to the oracle we are actually publishing to.
+ */
+async function checkKeeper(
+  oracle: string | undefined,
+  rpc: string | undefined,
+) {
+  const address = process.env.NEXT_PUBLIC_KEEPER_ADDRESS;
+  if (!address) {
+    return {
+      configured: false,
+      address: null,
+      wiredTo: null,
+      wiredCorrectly: null,
+      note: "not set — the relayer posts one transaction per ticker",
+    };
+  }
+  if (!rpc || !oracle) {
+    return {
+      configured: true,
+      address,
+      wiredTo: null,
+      wiredCorrectly: null,
+      note: "cannot verify without NEXT_PUBLIC_ORACLE_ADDRESS and _RPC",
+    };
+  }
+
+  try {
+    const wiredTo = (await createPublicClient({
+      transport: http(rpc),
+    }).readContract({
+      address: address as Hex,
+      abi: HOOD_ORACLE_KEEPER_ABI,
+      functionName: "oracle",
+    })) as string;
+
+    const wiredCorrectly = wiredTo.toLowerCase() === oracle.toLowerCase();
+    return {
+      configured: true,
+      address,
+      wiredTo,
+      wiredCorrectly,
+      note: wiredCorrectly
+        ? "batching enabled"
+        : `points at ${wiredTo}, not the oracle this service publishes to`,
+    };
+  } catch (e) {
+    return {
+      configured: true,
+      address,
+      wiredTo: null,
+      wiredCorrectly: false,
+      note: `unreadable: ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`,
+    };
+  }
+}
+
 export async function GET() {
   const now = new Date();
   const started = Date.now();
@@ -164,6 +229,7 @@ export async function GET() {
   const signerTrusted =
     oracle && rpc ? await checkSignerTrusted(oracle, rpc, signer) : null;
   const relayer = await checkRelayer(rpc);
+  const keeper = await checkKeeper(oracle, rpc);
 
   const problems: string[] = [];
   if (!upstreamOk) problems.push("no provider resolved");
@@ -192,6 +258,7 @@ export async function GET() {
       problems,
       time: now.toISOString(),
       upstream: { ok: upstreamOk, error: upstreamError },
+      keeper,
       providers: ALL_PROVIDERS.map((p) => ({
         key: p.key,
         label: p.label,

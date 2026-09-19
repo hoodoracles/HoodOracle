@@ -24,7 +24,7 @@ import {
   type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { HOOD_ORACLE_ABI } from "@/lib/abi";
+import { HOOD_ORACLE_ABI, HOOD_ORACLE_KEEPER_ABI } from "@/lib/abi";
 import { buildQuotes } from "@/lib/quote";
 import { signQuote, isSignerConfigured, toScaled } from "@/lib/sign";
 import { UNIVERSE } from "@/lib/universe";
@@ -148,6 +148,9 @@ async function handle(req: Request) {
   const rpcUrl = process.env.NEXT_PUBLIC_ORACLE_RPC;
   const chainId = Number(process.env.NEXT_PUBLIC_ORACLE_CHAIN_ID ?? 0);
   const relayerKey = process.env.RELAYER_KEY as Hex | undefined;
+  // Optional. Without it the relayer posts one transaction per ticker, which
+  // is what it did before the keeper existed and still works.
+  const keeper = process.env.NEXT_PUBLIC_KEEPER_ADDRESS as Hex | undefined;
 
   const missing: string[] = [];
   if (!oracle) missing.push("NEXT_PUBLIC_ORACLE_ADDRESS");
@@ -258,6 +261,12 @@ async function handle(req: Request) {
         session: SESSION_NAME[classifySession(now)],
         relayer: account.address,
         balanceEth: Number(balance) / 1e18,
+        mode:
+          toPost.length === 0
+            ? "nothing to post"
+            : keeper && toPost.length > 1
+              ? `batch via keeper ${keeper}`
+              : "one transaction per ticker",
         wouldPost: toPost.map(({ index, reason }) => ({
           ticker: quotes[index].ticker,
           price: quotes[index].price,
@@ -281,36 +290,111 @@ async function handle(req: Request) {
   const posted: { ticker: string; hash: string; reason: string }[] = [];
   const failed: { ticker: string; error: string }[] = [];
 
-  for (const { index, reason } of toPost) {
-    const q = quotes[index];
+  /** Pack a quote into the on-chain tuple. */
+  function tupleFor(q: (typeof quotes)[number]) {
+    return {
+      price: toScaled(q.price),
+      confidenceBps: BigInt(q.confidenceBps),
+      session: q.session,
+      provenance: q.provenance,
+      sourceCount: q.sourceCount,
+      maxDeviationBps: BigInt(Math.round(q.maxDeviationBps)),
+      lastTradeTime: BigInt(q.lastTradeTime),
+      publishTime: BigInt(q.publishTime),
+    };
+  }
+
+  // A batch of one is a batch that pays the keeper's call overhead to save
+  // nothing, so the helper is only worth using from two upwards.
+  const useKeeper = Boolean(keeper) && toPost.length > 1;
+  let batchHash: string | null = null;
+  // Distinct from `batchHash`: deciding not to send because every quote would
+  // be refused is the batch path succeeding, and must not fall through to the
+  // one-at-a-time loop and post them all over again.
+  let batchHandled = false;
+
+  if (useKeeper) {
+    const tickers = toPost.map(({ index }) => quotes[index].ticker);
+    const tuples = toPost.map(({ index }) => tupleFor(quotes[index]));
+    const signatures = await Promise.all(
+      toPost.map(async ({ index }) => (await signQuote(quotes[index])).signature),
+    );
+
     try {
-      const signed = await signQuote(q);
-      const hash = await wallet.writeContract({
-        address: oracle as Hex,
-        abi: HOOD_ORACLE_ABI,
-        functionName: "postQuote",
-        args: [
-          q.ticker,
-          {
-            price: toScaled(q.price),
-            confidenceBps: BigInt(q.confidenceBps),
-            session: q.session,
-            provenance: q.provenance,
-            sourceCount: q.sourceCount,
-            maxDeviationBps: BigInt(Math.round(q.maxDeviationBps)),
-            lastTradeTime: BigInt(q.lastTradeTime),
-            publishTime: BigInt(q.publishTime),
-          },
-          signed.signature,
-        ],
-        nonce: nonce++,
+      // Simulate before sending. postQuotes reports per-quote success in its
+      // return value, and nothing else can see that without waiting for a
+      // receipt — which this endpoint deliberately does not do, because eight
+      // sequential receipts outlast the invocation. An eth_call is free and
+      // answers the same question, so a bad signature is caught before it is
+      // paid for rather than after.
+      const sim = await pub.simulateContract({
+        address: keeper as Hex,
+        abi: HOOD_ORACLE_KEEPER_ABI,
+        functionName: "postQuotes",
+        args: [tickers, tuples, signatures],
+        account,
       });
-      posted.push({ ticker: q.ticker, hash, reason });
+      const willPost = sim.result as readonly boolean[];
+
+      if (willPost.some(Boolean)) {
+        const hash = await wallet.writeContract({
+          ...sim.request,
+          nonce: nonce++,
+        });
+        batchHash = hash;
+        batchHandled = true;
+
+        toPost.forEach(({ index, reason }, i) => {
+          const ticker = quotes[index].ticker;
+          if (willPost[i]) {
+            posted.push({ ticker, hash, reason });
+          } else {
+            // Not a failure of ours: almost always another relayer got there
+            // first, which the next run's chain read resolves by itself.
+            skipped.push({ ticker, reason: "rejected on simulation, likely already posted" });
+          }
+        });
+      } else {
+        // Every quote would be refused, so sending is pure gas.
+        batchHandled = true;
+        toPost.forEach(({ index }) => {
+          skipped.push({
+            ticker: quotes[index].ticker,
+            reason: "whole batch rejected on simulation, nothing sent",
+          });
+        });
+      }
     } catch (e) {
+      // The batch itself could not even be simulated or sent. Fall through to
+      // one-at-a-time rather than losing the round: a keeper misconfiguration
+      // must not be able to stop the feed.
       failed.push({
-        ticker: q.ticker,
+        ticker: "(batch)",
         error: e instanceof Error ? e.message.split("\n")[0] : String(e),
       });
+      batchHandled = false;
+    }
+  }
+
+  if (!batchHandled) {
+    for (const { index, reason } of toPost) {
+      const q = quotes[index];
+      try {
+        const signed = await signQuote(q);
+        const hash = await wallet.writeContract({
+          address: oracle as Hex,
+          abi: HOOD_ORACLE_ABI,
+          functionName: "postQuote",
+          args: [q.ticker, tupleFor(q), signed.signature],
+          nonce: nonce++,
+        });
+        posted.push({ ticker: q.ticker, hash, reason });
+      } catch (e) {
+        failed.push({
+          ticker: q.ticker,
+          error: e instanceof Error ? e.message.split("\n")[0] : String(e),
+        });
+      }
     }
   }
 
@@ -330,6 +414,13 @@ async function handle(req: Request) {
       session: SESSION_NAME[classifySession(now)],
       relayer: account.address,
       balanceEth: Number(balance) / 1e18,
+      mode:
+        toPost.length === 0
+          ? "nothing to post"
+          : batchHash
+            ? "batched"
+            : "one transaction per ticker",
+      batchTx: batchHash,
       posted,
       skipped,
       failed,
