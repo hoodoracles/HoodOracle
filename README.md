@@ -376,6 +376,18 @@ deployment can publish at all, without exposing either secret:
 }
 ```
 
+`relayer.lastCall` records who last hit `/api/cron/publish` and what happened,
+which separates the two failures that look identical from outside — a scheduler
+that never fires, and one that fires and is rejected:
+
+```json
+"lastCall": { "at": "…", "outcome": "unauthorised", "userAgent": "cron-job.org/1.0" }
+```
+
+`null` means no call reached *that instance*; it is in-process, so a recycled
+serverless instance forgets. `outcome: "unauthorised"` with a scheduler's
+user-agent means the job is firing and the header is wrong.
+
 `ready: false` lists exactly what is missing. The most common cause is
 environment variables added in the Vercel dashboard **after** the last
 deployment — Vercel applies them only to new deployments, so the running build

@@ -8,6 +8,7 @@ import { SESSION_NAME } from "@/lib/types";
 import { fetchConsensus, ALL_PROVIDERS } from "@/lib/providers";
 import { cacheStats } from "@/lib/cache";
 import { CALIBRATION } from "@/lib/calibration";
+import { lastCall } from "@/lib/lastcall";
 
 export const dynamic = "force-dynamic";
 
@@ -128,6 +129,12 @@ async function checkRelayer(rpc: string | undefined) {
   return {
     ready: blockers.length === 0,
     blockers,
+    /**
+     * Best-effort: in-process, so null means "no call reached this instance",
+     * not "no call happened". Still the fastest way to tell a scheduler that
+     * never fired from one whose header is wrong.
+     */
+    lastCall: lastCall(),
     cronSecretSet: !!process.env.CRON_SECRET,
     keyConfigured: keyValid,
     /** Public either way — it is the `from` on every transaction it sends. */

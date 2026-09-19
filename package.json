@@ -14,7 +14,8 @@
     "deploy": "tsx scripts/deploy.mts",
     "publish": "tsx scripts/publish.mts",
     "test:providers": "tsx scripts/providers.mts",
-    "calibrate": "tsx scripts/calibrate.mts"
+    "calibrate": "tsx scripts/calibrate.mts",
+    "state": "tsx scripts/state.mts"
   },
   "license": "ISC",
   "private": true,
