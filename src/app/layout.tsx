@@ -36,7 +36,13 @@ export const metadata: Metadata = {
 const NAV = [
   { href: "/", label: "Feeds" },
   { href: "/why", label: "The gap" },
-  { href: "/coverage", label: "Track record" },
+  /**
+   * Not prefetched. /coverage is force-dynamic and rebuilds the ledger from
+   * the chain's event log, so speculatively fetching it from the nav on every
+   * other page means a full log scan for visitors who never click it — and
+   * that scan only grows as the archive does.
+   */
+  { href: "/coverage", label: "Track record", prefetch: false },
   { href: "/docs", label: "Docs" },
   { href: "/playground", label: "Playground" },
   { href: "/integrate", label: "Integrate" },
@@ -95,7 +101,12 @@ export default function RootLayout({
             </Link>
             <div className="nav-links">
               {NAV.map((n) => (
-                <Link key={n.href} className="nav-link" href={n.href}>
+                <Link
+                  key={n.href}
+                  className="nav-link"
+                  href={n.href}
+                  prefetch={n.prefetch}
+                >
                   {n.label}
                 </Link>
               ))}
