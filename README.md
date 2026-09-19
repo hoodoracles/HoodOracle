@@ -354,6 +354,18 @@ which is everything this needs.
 5. Save, then use **Test run**. A correct setup returns HTTP 200 with a JSON
    body containing `ok`, `posted`, `skipped` and `balanceEth`.
 
+Test the wiring first with `?dry=1`, which does everything except send:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" \
+  "https://<your-host>/api/cron/publish?dry=1"
+```
+
+It exercises auth, config, quote building and the full materiality decision,
+then stops at the transaction and reports `wouldPost` instead of `posted`. Use
+it to confirm a schedule before letting it spend anything — otherwise the first
+test of a new scheduler is also an irreversible mainnet write.
+
 Check `GET /api/health` first. Its `relayer` block reports whether this
 deployment can publish at all, without exposing either secret:
 
