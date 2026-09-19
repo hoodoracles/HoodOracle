@@ -107,6 +107,21 @@ export async function GET() {
         trustedOnChain: signerTrusted,
         contract: oracle ?? null,
       },
+      build: {
+        // Vercel injects these. Without them we can only infer the deployed
+        // version by probing for routes, which is a poor way to find out a
+        // deploy never happened.
+        commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local",
+        branch: process.env.VERCEL_GIT_COMMIT_REF ?? null,
+        env: process.env.VERCEL_ENV ?? "development",
+        /** Routes that exist in this build, so a stale deploy is obvious. */
+        routes: [
+          "/api/health",
+          "/api/quotes",
+          "/api/quote/[ticker]",
+          "/api/cron/publish",
+        ],
+      },
       calibration: {
         generatedAt: CALIBRATION.generatedAt,
         timeExponent: CALIBRATION.timeExponent,
