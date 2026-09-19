@@ -1,0 +1,81 @@
+{
+  "generatedAt": "2026-09-19T02:01:47.433Z",
+  "method": "OLS through the origin of realised close-to-open equity gap returns on the blended 0.6 BTC / 0.4 ETH move over the identical window, two years of daily bars.",
+  "stalenessCoeffBps": 24.83,
+  "timeExponent": 0.107,
+  "referenceGapHours": 17.5,
+  "instruments": {
+    "HOOD": {
+      "beta": 0.6903,
+      "priorBeta": 0.45,
+      "r2": 0.3788,
+      "samples": 498,
+      "overnightSigmaBps": 215,
+      "weekendSigmaBps": 232.3,
+      "coveragePct": 93.8
+    },
+    "COIN": {
+      "beta": 0.7914,
+      "priorBeta": 0.6,
+      "r2": 0.5575,
+      "samples": 498,
+      "overnightSigmaBps": 179.5,
+      "weekendSigmaBps": 164.7,
+      "coveragePct": 93.4
+    },
+    "NVDA": {
+      "beta": 0.2749,
+      "priorBeta": 0.2,
+      "r2": 0.1484,
+      "samples": 499,
+      "overnightSigmaBps": 149.7,
+      "weekendSigmaBps": 183.9,
+      "coveragePct": 95
+    },
+    "TSLA": {
+      "beta": 0.3567,
+      "priorBeta": 0.25,
+      "r2": 0.1724,
+      "samples": 499,
+      "overnightSigmaBps": 188.2,
+      "weekendSigmaBps": 217.9,
+      "coveragePct": 95.2
+    },
+    "AAPL": {
+      "beta": 0.1147,
+      "priorBeta": 0.12,
+      "r2": 0.0644,
+      "samples": 499,
+      "overnightSigmaBps": 103.9,
+      "weekendSigmaBps": 124.1,
+      "coveragePct": 96.4
+    },
+    "MSTR": {
+      "beta": 0.9503,
+      "priorBeta": 0.8,
+      "r2": 0.6446,
+      "samples": 499,
+      "overnightSigmaBps": 168.9,
+      "weekendSigmaBps": 194.7,
+      "coveragePct": 94.2
+    },
+    "SPY": {
+      "beta": 0.1278,
+      "priorBeta": 0.15,
+      "r2": 0.2413,
+      "samples": 499,
+      "overnightSigmaBps": 54.8,
+      "weekendSigmaBps": 61.5,
+      "coveragePct": 95.8
+    },
+    "TLT": {
+      "beta": 0.0008,
+      "priorBeta": 0,
+      "r2": -0.0022,
+      "samples": 499,
+      "overnightSigmaBps": 56.9,
+      "weekendSigmaBps": 65.3,
+      "coveragePct": 95.6
+    }
+  }
+}
