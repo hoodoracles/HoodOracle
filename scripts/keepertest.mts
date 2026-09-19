@@ -277,6 +277,149 @@ const partialPosted = partialRc.logs.filter(
 check("the one newer quote lands", partialPosted.length === 1, `emitted ${partialPosted.length}`);
 check("the transaction still succeeds", partialRc.status === "success");
 
+// --------------------------------------------- the TRADED path, end to end
+//
+// Everything above, and everything on mainnet, is DERIVED: the oracle has only
+// ever run while the tape was shut, so the path a lending market actually
+// depends on — a live print, a tight band, getPriceIfTraded returning rather
+// than reverting — has never executed against a real chain. Nor has the
+// ledger's resolution logic, which needs a TRADED quote to score a closure
+// against and has so far been exercised only by fixtures and a replay.
+//
+// A synthetic live print on a local chain closes both. It is not published
+// anywhere public, so it cannot pollute the real record.
+
+console.log("\n=== the TRADED path ===");
+{
+  const hood = quotes.find((q) => q.ticker === "HOOD")!;
+  const live = {
+    ...hood,
+    // A real print, seconds old, with the tight band a live session carries.
+    provenance: 0, // TRADED
+    session: 0, // REGULAR
+    confidenceBps: 14,
+    lastTradeTime: hood.publishTime + 30,
+    publishTime: hood.publishTime + 30,
+  };
+  const liveSigned = await signQuote(live as typeof hood);
+  const liveTuple = {
+    price: toScaled(live.price),
+    confidenceBps: BigInt(live.confidenceBps),
+    session: live.session,
+    provenance: live.provenance,
+    sourceCount: live.sourceCount,
+    maxDeviationBps: BigInt(Math.round(live.maxDeviationBps)),
+    lastTradeTime: BigInt(live.lastTradeTime),
+    publishTime: BigInt(live.publishTime),
+  };
+
+  // Before: the liquidation path must refuse.
+  let refusedBefore = false;
+  try {
+    await pub.readContract({
+      address: oracle,
+      abi: oracleArtifact.abi,
+      functionName: "getPriceIfTraded",
+      args: ["HOOD", 200n],
+    });
+  } catch {
+    refusedBefore = true;
+  }
+  check("getPriceIfTraded refuses a DERIVED quote", refusedBefore);
+
+  const h = await wallet.writeContract({
+    address: oracle,
+    abi: oracleArtifact.abi,
+    functionName: "postQuote",
+    args: ["HOOD", liveTuple, liveSigned.signature],
+  });
+  const rc = await pub.waitForTransactionReceipt({ hash: h });
+  check("a TRADED quote posts", rc.status === "success");
+
+  const px = (await pub.readContract({
+    address: oracle,
+    abi: oracleArtifact.abi,
+    functionName: "getPriceIfTraded",
+    args: ["HOOD", 200n],
+  })) as bigint;
+  check(
+    "getPriceIfTraded now RETURNS a price",
+    px === liveTuple.price,
+    `$${Number(px) / 1e8}`,
+  );
+
+  const isLive = (await pub.readContract({
+    address: oracle,
+    abi: oracleArtifact.abi,
+    functionName: "isLive",
+    args: ["HOOD", 200n],
+  })) as boolean;
+  check("isLive is true", isLive);
+
+  // The band ceiling still bites on a live print.
+  let tooTight = false;
+  try {
+    await pub.readContract({
+      address: oracle,
+      abi: oracleArtifact.abi,
+      functionName: "getPriceIfTraded",
+      args: ["HOOD", 10n],
+    });
+  } catch {
+    tooTight = true;
+  }
+  check("and still refuses when the band is wider than asked", tooTight);
+
+  // ---- the ledger resolves a real closure, from real chain logs
+  const { buildLedger, loadArchive } = await import("../src/lib/ledger.ts");
+  const archive = await loadArchive(
+    {
+      address: oracle,
+      rpcUrl: RPC,
+      chainId: foundry.id,
+      chainName: "anvil",
+    },
+    { fresh: true },
+  );
+  const ledger = buildLedger(archive);
+  const hoodEp = ledger.episodes.filter((e) => e.ticker === "HOOD");
+
+  check(
+    "the ledger resolves a closure once a live print lands",
+    hoodEp.length === 1,
+    `episodes=${hoodEp.length}`,
+  );
+  if (hoodEp.length === 1) {
+    const r = hoodEp[0].atReopen;
+    check(
+      "  and scores it against the print, not the model",
+      r.resolvedPrice === live.price,
+      `resolved=$${r.resolvedPrice} predicted=$${r.predictedPrice}`,
+    );
+    check(
+      "  with the band the closure actually carried",
+      r.confidenceBps === hood.confidenceBps,
+      `${r.confidenceBps}bps`,
+    );
+    // Same price, so the print sits dead centre and must count as a hit.
+    check("  an unchanged price is a hit", r.hit === true);
+    console.log(
+      `  HOOD ±${(r.confidenceBps / 100).toFixed(2)}% [${r.lower.toFixed(2)}–${r.upper.toFixed(2)}] ` +
+        `resolved $${r.resolvedPrice.toFixed(2)}  err ${r.errorBps.toFixed(0)}bps  hit=${r.hit}`,
+    );
+  }
+  check(
+    "other tickers stay pending, not scored",
+    ledger.pending.length === UNIVERSE.length - 1,
+    `pending=${ledger.pending.length}`,
+  );
+  check(
+    "coverage is now a real number",
+    ledger.atReopen.coveragePct !== null,
+    `${ledger.atReopen.coveragePct}% over ${ledger.atReopen.n}`,
+  );
+}
+
 // ------------------------------------------------------------------ gas
 
 console.log("\n=== gas: batch vs one-at-a-time ===");
