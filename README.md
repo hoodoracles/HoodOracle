@@ -10,7 +10,7 @@
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.29-363636.svg)](https://soliditylang.org/)
 [![Chain](https://img.shields.io/badge/Robinhood%20Chain-4663-1b3f60.svg)](https://explorer.mainnet.chain.robinhood.com)
 [![Band coverage](https://img.shields.io/badge/band%20coverage-94.9%25%20over%203%2C990%20gaps-1a6b4a.svg)](#the-track-record)
-[![Tests](https://img.shields.io/badge/tests-16%20solidity%20%C2%B7%20160%20checks-1a6b4a.svg)](#tests)
+[![Tests](https://img.shields.io/badge/tests-27%20solidity%20%C2%B7%20160%20checks-1a6b4a.svg)](#tests)
 
 **[Live feeds](https://www.hoodoracle.org)** · **[Track record](https://www.hoodoracle.org/coverage)** · **[Docs](https://www.hoodoracle.org/docs)** · **[Integrate](https://www.hoodoracle.org/integrate)** · **[Playground](https://www.hoodoracle.org/playground)**
 
@@ -397,6 +397,49 @@ live contract for every tracked ticker.
 
 Full documentation in [sdk/README.md](sdk/README.md).
 
+## Drop into Morpho, or anything that reads Chainlink
+
+Robinhood Chain's builder docs send integrators to Chainlink's
+`AggregatorV3Interface`, and most lending code reads nothing else. Morpho's
+`MorphoChainlinkOracleV2`, Aave-style routers and CDP engines are examples.
+`HoodOracleFeed` is hoodoracle behind that interface, so an existing
+Chainlink slot can point at it without changing any code.
+
+It adds two things the raw oracle does not:
+
+- **It prices the token, not the share.** A Robinhood Stock Token is worth the
+  share price times `uiMultiplier()` (ERC-8056), which moves with dividends and
+  splits. On 23 Sep 2026 NVDA's was 1.000775 and SPY's 1.001718. The feed
+  reads it live on every call.
+- **In strict mode it refuses to answer** unless the quote is TRADED, under
+  30 minutes old and inside a 1% band. A Chainlink-shaped feed has no field for
+  "this is a weekend model", so not answering is the only way to say it.
+  Morpho reads the oracle on borrow, withdrawCollateral and liquidate, and
+  never on supply, withdraw or repay. While the tape is shut nobody is
+  liquidated on a guess, and borrowers can still repay.
+
+`test/MorphoForkDemo.t.sol` runs one weekend against mainnet state: the real
+Morpho, its oracle factory and IRM, USDG, the NVDA stock token and
+hoodoracle. It uses two markets that are identical except for the oracle:
+
+```
+Saturday 12:00 ET   stock market shut, BTC falls, the model marks NVDA -4%
+  plain market       LTV 78.2% > 77%: liquidated. borrower loses 8.402 NVDA of 10
+  hoodoracle market  liquidate() reverted: NotLivePrint(DERIVED)
+Monday 09:30 ET     the first real print. NVDA opens -1%, not -4%
+  hoodoracle market  LTV 74.9%: liquidate() reverted: "position is healthy"
+Monday 10:15 ET     the print confirms a real fall, NVDA -6%
+  hoodoracle market  LTV 78.9%: liquidated at a traded price
+```
+
+The prices after Friday's are a scenario, signed by a throwaway key that the
+fork allow-lists. The production signer never signs a made-up quote, because
+a signature over invented data would be just as valid on mainnet.
+
+```bash
+DEPLOY_CONFIRM=yes npm run deploy:feed -- rh-mainnet   # feed, Morpho oracle, market
+```
+
 ## Tests
 
 ```bash
@@ -408,7 +451,9 @@ npm run test:weekend    # confidence widening across the dark window
 npm run test:browser    # Playwright across every page, console errors, mobile
 npm run test:onchain    # deploy to anvil, post a real signed quote, read back
 npm run test:ledger     # coverage scoring: fixtures, then 2y of real gaps
-forge test -vv          # 16 Solidity tests for the keeper, incl. partial batches
+forge test -vv          # 27 Solidity tests: the keeper, and the Chainlink-shaped feed
+forge test --fork-url https://rpc.mainnet.chain.robinhood.com --match-contract MorphoForkDemo -vv
+                        # one weekend on real Morpho, real NVDA token, two oracles
 npm run test:keeper     # batch relay end-to-end on anvil with real signed quotes
 npm run test:sdk        # SDK vs server vs contract; live chain and live API
 npm run test:relay      # relay decision and stall alarm, replaying the Sep 2026 freeze
@@ -725,10 +770,13 @@ hoodoracle/
 │
 ├── contracts/
 │   ├── HoodOracle.sol              Signature verifier, session-aware read interface
-│   └── HoodOracleKeeper.sol        Batch relaying, on-chain staleness discovery
+│   ├── HoodOracleKeeper.sol        Batch relaying, on-chain staleness discovery
+│   └── HoodOracleFeed.sol          Chainlink-shaped adapter: token multiplier, live prints only
 │
 ├── test/
-│   └── HoodOracleKeeper.t.sol      16 forge tests, zero external dependencies
+│   ├── HoodOracleKeeper.t.sol      16 forge tests, zero external dependencies
+│   ├── HoodOracleFeed.t.sol        11 forge tests for the adapter
+│   └── MorphoForkDemo.t.sol        a weekend on mainnet Morpho, run with --fork-url
 │
 ├── src/
 │   ├── lib/

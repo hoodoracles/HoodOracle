@@ -4,6 +4,28 @@ export const metadata = {
     "Post signed quotes on-chain and read them with session-aware policy.",
 };
 
+/** The mainnet market opened on HoodOracleFeed. Null until it is deployed. */
+const LIVE_MARKET: { feed: string; oracle: string; id: string } | null = null;
+
+/** test/MorphoForkDemo.t.sol, run against mainnet state on 23 Sep 2026. */
+const WEEKEND = `Friday 15:00 ET   the tape is open
+  share $228.87 x uiMultiplier 1.000775 = token $229.0474
+  borrower: 10 NVDA collateral, borrows 1,720 USDG in each market, LTV 75.0%
+
+Saturday 12:00 ET   stock market shut, BTC falls, the model marks NVDA -4%
+  quote: DERIVED $219.71 +/- 4.20%. A model, not a trade.
+  plain market       LTV 78.2% > 77%: liquidated. borrower loses 8.402 NVDA of 10
+  hoodoracle market  liquidate() reverted: NotLivePrint(DERIVED)
+  hoodoracle market  borrow()    reverted: NotLivePrint(DERIVED)
+  hoodoracle market  repay()     still works
+
+Monday 09:30 ET   the first real print. NVDA opens -1%, not -4%
+  hoodoracle market  LTV 74.9%: liquidate() reverted: "position is healthy"
+  the model was 3% too pessimistic; the plain market's borrower paid 8.402 NVDA for it
+
+Monday 10:15 ET   the print confirms a real fall, NVDA -6%
+  hoodoracle market  LTV 78.9%: liquidated at a traded price, 8.481 NVDA seized`;
+
 export default function Integrate() {
   return (
     <div className="prose" style={{ paddingTop: 50 }}>
@@ -215,6 +237,69 @@ const stale = await keeper.needsUpdate(["HOOD", "COIN", "TLT"]);
 const willLand = await keeper.simulate(signedQuotes, account);
 
 await keeper.postQuotes(wallet, signedQuotes);`}</pre>
+
+      <h2 id="morpho">6 · Drop into Morpho, or anything that reads Chainlink</h2>
+
+      <p>
+        Most lending code reads one interface: Chainlink&apos;s{" "}
+        <code>latestRoundData</code>. Robinhood Chain&apos;s own builder docs
+        point there, and Morpho&apos;s oracle factory, Aave-style routers and
+        CDP engines all read nothing else. <code>HoodOracleFeed</code> is
+        hoodoracle behind that interface, so an existing Chainlink slot can
+        point at it without any code changing.
+      </p>
+
+      <p>
+        It does two things the raw oracle does not. It prices the{" "}
+        <strong>token</strong>, not the share: a Robinhood Stock Token is worth
+        the share price times <code>uiMultiplier()</code>, which moves with
+        dividends and splits, and it is read live on every call. And in strict
+        mode it <strong>refuses to answer</strong> unless the quote is a live
+        print, under 30 minutes old and inside a 1% band. A Chainlink-shaped
+        feed has no field for &ldquo;this is a weekend model&rdquo;, so not
+        answering is the only way to say it. Morpho reads the oracle on borrow,
+        withdrawCollateral and liquidate, and never on supply, withdraw or
+        repay. So while the tape is shut nobody is liquidated on a guess, and
+        borrowers can still repay.
+      </p>
+
+      <pre>{`HoodOracleFeed feed = new HoodOracleFeed(
+    HOOD_ORACLE,        `}<span className="c">{`// 0x65cf…8d30`}</span>{`
+    "NVDA",
+    NVDA_STOCK_TOKEN,   `}<span className="c">{`// uiMultiplier() applied per call`}</span>{`
+    30 minutes,         `}<span className="c">{`// maxAge: a print nobody replaced expires`}</span>{`
+    100,                `}<span className="c">{`// maxBps: 1% band ceiling`}</span>{`
+    true                `}<span className="c">{`// live prints only`}</span>{`
+);
+
+`}<span className="c">{`// Morpho's own factory, the same call a Chainlink feed would get.`}</span>{`
+address oracle = MorphoChainlinkOracleV2Factory.createMorphoChainlinkOracleV2(
+    address(0), 1, address(feed), address(0), 18,   `}<span className="c">{`// NVDA token, 18 decimals`}</span>{`
+    address(0), 1, address(0), address(0), 6,       `}<span className="c">{`// USDG, 6 decimals`}</span>{`
+    salt
+);`}</pre>
+
+      {LIVE_MARKET && (
+        <>
+          <p>Live on Robinhood Chain mainnet, as a USDG / NVDA market at 77% LLTV:</p>
+          <pre>{`feed           ${LIVE_MARKET.feed}
+morpho oracle  ${LIVE_MARKET.oracle}
+market id      ${LIVE_MARKET.id}`}</pre>
+        </>
+      )}
+
+      <p>
+        The weekend below was run against mainnet state: the real Morpho, its
+        real factory and IRM, USDG, the NVDA stock token and hoodoracle. It uses
+        two markets that are identical except for the oracle. The prices after
+        Friday&apos;s are a scenario, signed by a throwaway key the fork
+        allow-lists.
+      </p>
+
+      <pre>{WEEKEND}</pre>
+
+      <pre>{`forge test --fork-url https://rpc.mainnet.chain.robinhood.com \\
+  --match-contract MorphoForkDemo -vv`}</pre>
 
       <h2>Guards the contract enforces</h2>
 

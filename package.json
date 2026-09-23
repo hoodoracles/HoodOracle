@@ -20,6 +20,7 @@
     "ledger": "tsx scripts/ledger.mts",
     "test:ledger": "tsx scripts/ledgertest.mts",
     "deploy:keeper": "tsx scripts/deploy-keeper.mts",
+    "deploy:feed": "tsx scripts/deploy-feed.mts",
     "test:keeper": "tsx scripts/keepertest.mts",
     "test:sdk": "tsx scripts/sdktest.mts",
     "test:relay": "tsx scripts/relaytest.mts",
