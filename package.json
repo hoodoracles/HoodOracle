@@ -22,6 +22,7 @@
     "deploy:keeper": "tsx scripts/deploy-keeper.mts",
     "test:keeper": "tsx scripts/keepertest.mts",
     "test:sdk": "tsx scripts/sdktest.mts",
+    "test:relay": "tsx scripts/relaytest.mts",
     "sdk:build": "npm --prefix sdk run build",
     "push": "bash scripts/push.sh"
   },

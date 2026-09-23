@@ -31,22 +31,10 @@ import { UNIVERSE } from "@/lib/universe";
 import { SESSION_NAME } from "@/lib/types";
 import { classifySession } from "@/lib/session";
 import { callerAgent, recordCall } from "@/lib/lastcall";
+import { decide, type StoredQuote } from "@/lib/relay";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-// Thresholds are tunable per chain: what is worth a transaction on a cheap L2
-// is not worth one elsewhere. Defaults suit an Orbit chain where a post costs a
-// fraction of a cent.
-const PRICE_MOVE_BPS = Number(process.env.CRON_PRICE_MOVE_BPS ?? 10);
-const BAND_MOVE_BPS = Number(process.env.CRON_BAND_MOVE_BPS ?? 15);
-const MAX_ONCHAIN_AGE = Number(process.env.CRON_MAX_ONCHAIN_AGE ?? 3 * 3600);
-
-interface StoredQuote {
-  price: bigint;
-  confidenceBps: bigint;
-  publishTime: bigint;
-}
 
 /** Constant-time compare, so a wrong secret leaks nothing by timing. */
 function secretEquals(a: string, b: string): boolean {
@@ -209,36 +197,9 @@ async function handle(req: Request) {
   const skipped: { ticker: string; reason: string }[] = [];
 
   quotes.forEach((q, i) => {
-    const s = stored[i];
-    if (!s || s.publishTime === 0n) {
-      toPost.push({ index: i, reason: "no quote on chain yet" });
-      return;
-    }
-    if (BigInt(q.publishTime) <= s.publishTime) {
-      skipped.push({ ticker: q.ticker, reason: "not newer than stored" });
-      return;
-    }
-
-    const age = nowSec - Number(s.publishTime);
-    const onChainPrice = Number(s.price) / 1e8;
-    const priceMoveBps =
-      onChainPrice > 0
-        ? Math.abs((q.price - onChainPrice) / onChainPrice) * 10_000
-        : Infinity;
-    const bandMoveBps = Math.abs(q.confidenceBps - Number(s.confidenceBps));
-
-    if (age >= MAX_ONCHAIN_AGE) {
-      toPost.push({ index: i, reason: `on-chain quote is ${Math.round(age / 60)}m old` });
-    } else if (priceMoveBps >= PRICE_MOVE_BPS) {
-      toPost.push({ index: i, reason: `price moved ${priceMoveBps.toFixed(1)}bps` });
-    } else if (bandMoveBps >= BAND_MOVE_BPS) {
-      toPost.push({ index: i, reason: `band moved ${bandMoveBps.toFixed(0)}bps` });
-    } else {
-      skipped.push({
-        ticker: q.ticker,
-        reason: `unchanged (${priceMoveBps.toFixed(1)}bps price, ${bandMoveBps.toFixed(0)}bps band)`,
-      });
-    }
+    const d = decide(q, stored[i], nowSec);
+    if (d.post) toPost.push({ index: i, reason: d.reason });
+    else skipped.push({ ticker: q.ticker, reason: d.reason });
   });
 
   const dry = isDryRun(req);

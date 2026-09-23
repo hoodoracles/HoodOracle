@@ -4,6 +4,9 @@
 // so the runtime carries only what it needs.
 
 export const HOOD_ORACLE_ABI = [
+  // Declared so a never-posted ticker decodes as NoQuote rather than a bare
+  // selector, which /api/health would otherwise read as the RPC failing.
+  { type: "error", name: "NoQuote", inputs: [{ name: "ticker", type: "string" }] },
   {
     type: "function",
     name: "postQuote",

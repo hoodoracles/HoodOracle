@@ -4,12 +4,13 @@ import { createPublicClient, http, type Hex } from "viem";
 import { isSignerConfigured, signerAddress } from "@/lib/sign";
 import { UNIVERSE } from "@/lib/universe";
 import { classifySession, describeGap, nextSessionChange } from "@/lib/session";
-import { SESSION_NAME } from "@/lib/types";
+import { PROVENANCE_NAME, SESSION_NAME, type Provenance } from "@/lib/types";
 import { fetchConsensus, ALL_PROVIDERS } from "@/lib/providers";
 import { cacheStats } from "@/lib/cache";
 import { CALIBRATION } from "@/lib/calibration";
 import { lastCall } from "@/lib/lastcall";
-import { HOOD_ORACLE_KEEPER_ABI } from "@/lib/abi";
+import { HOOD_ORACLE_ABI, HOOD_ORACLE_KEEPER_ABI } from "@/lib/abi";
+import { stallProblems, type StoredQuote } from "@/lib/relay";
 
 export const dynamic = "force-dynamic";
 
@@ -208,6 +209,63 @@ async function checkKeeper(
   }
 }
 
+/**
+ * Is the chain still being fed?
+ *
+ * Every other check here can pass while the on-chain quotes rot: the service
+ * signs, the signer is trusted, the relayer is funded, and the scheduler that
+ * is supposed to call it simply stops. That happened on 20 Sep 2026 and this
+ * endpoint answered "ok" for 42 hours while getPriceIfTraded served a Monday
+ * morning print through two closes. So the chain itself is read, and judged
+ * against what a working relayer would have left behind.
+ */
+async function checkFeed(oracle: string | undefined, rpc: string | undefined) {
+  if (!oracle || !rpc) return null;
+  const client = createPublicClient({ transport: http(rpc) });
+
+  const stored = await Promise.all(
+    UNIVERSE.map(async ({ ticker }) => {
+      try {
+        const quote = (await client.readContract({
+          address: oracle as Hex,
+          abi: HOOD_ORACLE_ABI,
+          functionName: "getQuote",
+          args: [ticker],
+        })) as StoredQuote;
+        return { ticker, quote, error: null };
+      } catch (e) {
+        // NoQuote reverts; anything else is the RPC failing to answer.
+        const msg = e instanceof Error ? e.message : String(e);
+        return /NoQuote/.test(msg)
+          ? { ticker, quote: null, error: null }
+          : { ticker, quote: null, error: msg.split("\n")[0] };
+      }
+    }),
+  );
+
+  // An RPC that will not answer says nothing about the feed either way.
+  if (stored.some((s) => s.error)) {
+    return { readable: false, problems: [], oldestAgeSeconds: null, quotes: [] };
+  }
+
+  const now = new Date();
+  const nowSec = Math.floor(now.getTime() / 1000);
+  const ages = stored
+    .filter((s) => s.quote)
+    .map((s) => nowSec - Number(s.quote!.publishTime));
+
+  return {
+    readable: true,
+    problems: stallProblems(stored, now),
+    oldestAgeSeconds: ages.length ? Math.max(...ages) : null,
+    quotes: stored.map(({ ticker, quote }) => ({
+      ticker,
+      provenance: quote ? PROVENANCE_NAME[quote.provenance as Provenance] : null,
+      ageSeconds: quote ? nowSec - Number(quote.publishTime) : null,
+    })),
+  };
+}
+
 export async function GET() {
   const now = new Date();
   const started = Date.now();
@@ -228,8 +286,11 @@ export async function GET() {
   const rpc = process.env.NEXT_PUBLIC_ORACLE_RPC;
   const signerTrusted =
     oracle && rpc ? await checkSignerTrusted(oracle, rpc, signer) : null;
-  const relayer = await checkRelayer(rpc);
-  const keeper = await checkKeeper(oracle, rpc);
+  const [relayer, keeper, feed] = await Promise.all([
+    checkRelayer(rpc),
+    checkKeeper(oracle, rpc),
+    checkFeed(oracle, rpc),
+  ]);
 
   const problems: string[] = [];
   if (!upstreamOk) problems.push("no provider resolved");
@@ -250,7 +311,14 @@ export async function GET() {
     );
   }
 
-  const healthy = upstreamOk && signerConfigured && signerTrusted !== false;
+  // Only a deployment that is meant to publish can be faulted for a stale
+  // chain. An API-only one legitimately never touches it.
+  const publishes = relayer.cronSecretSet && relayer.keyConfigured;
+  const feedStalled = publishes && !!feed && feed.problems.length > 0;
+  if (feedStalled) problems.push(...feed!.problems);
+
+  const healthy =
+    upstreamOk && signerConfigured && signerTrusted !== false && !feedStalled;
 
   return NextResponse.json(
     {
@@ -259,6 +327,7 @@ export async function GET() {
       time: now.toISOString(),
       upstream: { ok: upstreamOk, error: upstreamError },
       keeper,
+      feed,
       providers: ALL_PROVIDERS.map((p) => ({
         key: p.key,
         label: p.label,

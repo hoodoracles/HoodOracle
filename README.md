@@ -123,7 +123,7 @@ A consumer contract reads `provenance` before it reads `price`.
 |---|---|
 | `GET /api/quotes` | Every instrument, priced against one proxy snapshot |
 | `GET /api/quote/:ticker` | One instrument, signed, with digest and signer |
-| `GET /api/health` | Upstream reachability, signer, session. 503 when upstream is down |
+| `GET /api/health` | Upstream reachability, signer, relayer, on-chain freshness. 503 when upstream is down or the chain has stopped being fed |
 | `GET /api/coverage` | The published track record, scored from chain logs |
 
 ## Pages
@@ -411,6 +411,7 @@ npm run test:ledger     # coverage scoring: fixtures, then 2y of real gaps
 forge test -vv          # 16 Solidity tests for the keeper, incl. partial batches
 npm run test:keeper     # batch relay end-to-end on anvil with real signed quotes
 npm run test:sdk        # SDK vs server vs contract; live chain and live API
+npm run test:relay      # relay decision and stall alarm, replaying the Sep 2026 freeze
 npm run ledger          # print the on-chain track record
 ```
 
@@ -630,6 +631,31 @@ deployment — Vercel applies them only to new deployments, so the running build
 still sees nothing and the endpoint answers 401 to a correctly configured
 scheduler. Redeploy, then re-check.
 
+#### Alert on the chain, not the scheduler
+
+`ready: true` says the relayer *can* publish, not that anything is calling it.
+From 11:00 UTC on Sunday 20 Sep 2026 the scheduler stopped. The on-chain
+quotes froze on a TRADED print from Monday's open, and `/api/health` answered
+`ok` for 42 hours while `getPriceIfTraded` served that print through two
+closes.
+
+So `/api/health` now reads the chain too. Its `feed` block lists every
+ticker's on-chain provenance and age. The endpoint returns **503** when a
+quote is older than the relayer's heartbeat plus 15 minutes, or when the chain
+says TRADED while the tape is shut:
+
+That line is `npm run test:relay` replaying the real frozen quote at 21:00 ET
+on the Monday:
+
+```json
+"problems": ["HOOD is TRADED on chain but the tape has been shut for 1h 1m; getPriceIfTraded is serving a 11h 16m old print"]
+```
+
+Point an uptime monitor at `/api/health` and alert on non-200. cron-job.org's
+own failure notifications will do, on a separate job from the one that
+publishes. That catches a scheduler that stops within about 20 minutes rather
+than whenever someone next reads the chain.
+
 > **Watch `balanceEth`.** A warm `postQuote` costs about 53k gas. Eight of them
 > is ~424k gas, and at the chain's ~0.067 gwei that is ~0.000028 ETH per full
 > run. A five-minute schedule is 288 runs a day; most skip on the materiality
@@ -655,8 +681,13 @@ Every call spends gas, so it is deliberately stingy:
   nothing, rather than defaulting open.
 - **Posts only what moved.** Below a 10bps price move and a 15bps band move it
   skips, so a quiet weekend at a five-minute schedule costs nothing. Tune with
-  `CRON_PRICE_MOVE_BPS`, `CRON_BAND_MOVE_BPS`, `CRON_MAX_ONCHAIN_AGE`.
-- **Refreshes anyway after 3 hours**, so a feed never silently rots.
+  `CRON_PRICE_MOVE_BPS`, `CRON_BAND_MOVE_BPS`, `CRON_MAX_ONCHAIN_AGE`,
+  `CRON_MAX_LIVE_AGE`.
+- **Always posts a change of provenance or session**, whatever the price did.
+  TRADED against DERIVED is what a consumer's policy branches on.
+- **Refreshes anyway** after 15 minutes while trades can print, and after 3
+  hours while the tape is shut. A TRADED quote has to stay inside the oracle's
+  30-minute `maxQuoteAge`, because nothing on-chain expires it.
 - **Sends with explicit nonces and does not await receipts.** Eight sequential
   receipt waits outlive a serverless invocation, and the receipt says nothing
   the next run cannot read back.
@@ -681,7 +712,8 @@ Extra environment for the relayer:
 | `RELAYER_KEY` | yes | Funded key that pays gas. Separate from the signer. |
 | `CRON_PRICE_MOVE_BPS` | no | Default 10. |
 | `CRON_BAND_MOVE_BPS` | no | Default 15. |
-| `CRON_MAX_ONCHAIN_AGE` | no | Default 10800 (3h). |
+| `CRON_MAX_ONCHAIN_AGE` | no | Default 10800 (3h). Heartbeat while the tape is shut. |
+| `CRON_MAX_LIVE_AGE` | no | Default 900 (15m). Heartbeat while trades can print. |
 
 ## Repository structure
 
