@@ -1,14 +1,10 @@
+import { LIVE_FEED } from "@/lib/livefeed";
+import { FeedStatus } from "@/components/feedstatus";
+
 export const metadata = {
   title: "Integrate — hoodoracle",
   description:
     "Post signed quotes on-chain and read them with session-aware policy.",
-};
-
-/** The mainnet market opened on HoodOracleFeed, 23 Sep 2026. */
-const LIVE_MARKET: { feed: string; oracle: string; id: string } | null = {
-  feed: "0x334f71f9c9ff4efe730cf7b6e6b06c14c4b6a719",
-  oracle: "0xc65d284Efa6A3Df34540CBC8BA7C7fcbD0258604",
-  id: "0x1484485e9ebcd3c5b70c18ab30369ace2a2807e36962fd46f6c19be79a84a2c4",
 };
 
 /** test/MorphoForkDemo.t.sol, run against mainnet state on 23 Sep 2026. */
@@ -283,14 +279,12 @@ address oracle = MorphoChainlinkOracleV2Factory.createMorphoChainlinkOracleV2(
     salt
 );`}</pre>
 
-      {LIVE_MARKET && (
-        <>
-          <p>Live on Robinhood Chain mainnet, as a USDG / NVDA market at 77% LLTV:</p>
-          <pre>{`feed           ${LIVE_MARKET.feed}
-morpho oracle  ${LIVE_MARKET.oracle}
-market id      ${LIVE_MARKET.id}`}</pre>
-        </>
-      )}
+      <p>Live on Robinhood Chain mainnet, as a USDG / NVDA market at 77% LLTV:</p>
+      <pre>{`feed           ${LIVE_FEED.feed}
+morpho oracle  ${LIVE_FEED.morphoOracle}
+market id      ${LIVE_FEED.marketId}`}</pre>
+
+      <FeedStatus />
 
       <p>
         The weekend below was run against mainnet state: the real Morpho, its

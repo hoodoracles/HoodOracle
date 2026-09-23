@@ -148,3 +148,53 @@ export const HOOD_ORACLE_KEEPER_ABI = [
     outputs: [{ name: "", type: "uint256" }],
   },
 ] as const;
+
+/** HoodOracleFeed: the Chainlink-shaped adapter, plus the reasons it refuses. */
+export const HOOD_ORACLE_FEED_ABI = [
+  {
+    type: "function",
+    name: "latestRoundData",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [
+      { name: "roundId", type: "uint80" },
+      { name: "answer", type: "int256" },
+      { name: "startedAt", type: "uint256" },
+      { name: "updatedAt", type: "uint256" },
+      { name: "answeredInRound", type: "uint80" },
+    ],
+  },
+  {
+    type: "function",
+    name: "description",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  { type: "error", name: "NotLivePrint", inputs: [{ name: "provenance", type: "uint8" }] },
+  {
+    type: "error",
+    name: "StaleQuote",
+    inputs: [
+      { name: "publishTime", type: "uint64" },
+      { name: "nowTs", type: "uint256" },
+    ],
+  },
+  {
+    type: "error",
+    name: "BandTooWide",
+    inputs: [
+      { name: "confidenceBps", type: "uint64" },
+      { name: "maxBps", type: "uint64" },
+    ],
+  },
+  { type: "error", name: "NoQuote", inputs: [{ name: "ticker", type: "string" }] },
+  // Morpho's oracle, which bubbles the feed's revert unchanged.
+  {
+    type: "function",
+    name: "price",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
