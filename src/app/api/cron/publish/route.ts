@@ -87,10 +87,33 @@ function offeredCredentials(req: Request): string[] {
 }
 
 export async function GET(req: Request) {
-  return handle(req);
+  return handleSafely(req);
 }
 export async function POST(req: Request) {
-  return handle(req);
+  return handleSafely(req);
+}
+
+/**
+ * An unexpected throw is a transient fault until proven otherwise (an RPC
+ * that dropped a call, an upstream that timed out) and a 500 would count
+ * toward the scheduler disabling the job. Report it in the body instead;
+ * a fault that persists shows up as a stale chain on /api/health.
+ */
+async function handleSafely(req: Request) {
+  try {
+    return await handle(req);
+  } catch (e) {
+    const error = e instanceof Error ? e.message.split("\n")[0] : String(e);
+    recordCall({
+      at: new Date().toISOString(),
+      outcome: "error",
+      userAgent: callerAgent(req),
+    });
+    return NextResponse.json(
+      { ok: false, error },
+      { status: 200, headers: { "cache-control": "no-store" } },
+    );
+  }
 }
 
 /**
@@ -388,14 +411,20 @@ async function handle(req: Request) {
       quoteErrors: errors,
     },
     {
-      // A run where every send threw used to answer 200, so a scheduler logged
-      // it as "Successful" and nobody found out until someone read the chain.
-      // The status has to carry the outcome, because the status is the only
-      // part of this a scheduler looks at.
+      // A failed send answers 200, with ok:false and failed[] in the body.
       //
-      // Skipping everything is still 200: that is the materiality filter doing
-      // its job, not a fault.
-      status: failed.length > 0 ? 502 : 200,
+      // It used to answer 502 so the scheduler would notice, and cron-job.org
+      // noticed by switching the job off. On Sunday 20 Sep its last run failed
+      // with an HTTP error at 13:55 UTC, the job was disabled for too many
+      // failures, and the feed stayed frozen until someone re-enabled it on
+      // Wednesday. A failed send costs nothing to retry: the chain did not
+      // move, so the next run finds the same quote still material. So the
+      // scheduler must keep firing, and the alarm belongs on the outcome:
+      // /api/health returns 503 once the chain goes stale, and that is what a
+      // monitor watches.
+      //
+      // 401 and 503 above stay non-2xx. Those need a person either way.
+      status: 200,
       headers: { "cache-control": "no-store" },
     },
   );

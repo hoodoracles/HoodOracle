@@ -696,13 +696,16 @@ Status codes, because a scheduler reads the status and nothing else:
 
 | Code | Meaning |
 |---|---|
-| `200` | Posted, or skipped everything on the materiality thresholds. Both fine. |
+| `200` | The run happened. `ok: false` with `failed[]` or `error` means a send or an RPC call failed; the next run retries it. |
 | `401` | Credential missing or wrong. Body names which fields arrived. |
-| `502` | At least one send failed. The body's `failed[]` says which and why. |
 | `503` | Missing configuration. Body lists the variables. |
 
-A run where every send threw used to answer `200`, so a scheduler logged it as
-successful and the failure surfaced only when somebody read the chain.
+Failed sends used to answer `502`. cron-job.org responds to a run of failures
+by disabling the job. On Sunday 20 Sep the last run failed at 13:55 UTC, the
+job was switched off, and the feed stayed frozen until it was re-enabled on
+Wednesday. A failed send costs nothing to retry, so the scheduler has to keep
+firing. The alarm now watches the outcome instead: `/api/health` returns `503`
+once the chain goes stale.
 
 Extra environment for the relayer:
 

@@ -18,7 +18,8 @@ export type CallOutcome =
   | "unauthorised"
   | "not-configured"
   | "dry-run"
-  | "published";
+  | "published"
+  | "error";
 
 export interface LastCall {
   at: string;
