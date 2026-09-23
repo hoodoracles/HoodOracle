@@ -221,6 +221,22 @@ console.log("\n=== C. the policy layer refuses what it should ===\n");
     "a stale publishTime is caught",
     !sdkCheck(traded, { maxAgeSeconds: 60, now: Number(traded.publishTime) + 600 }).ok,
   );
+  // What the chain held from Mon 21 Sep 13:43 to Wed 23 Sep 07:41 UTC: a
+  // TRADED print nothing replaced, which getPriceIfTraded went on serving.
+  const leftover = { ...traded, publishTime: traded.publishTime - 42n * 3600n };
+  check(
+    "a TRADED quote 42h old is refused by default",
+    !sdkCheck(leftover).ok,
+    sdkCheck(leftover).reasons[0]?.slice(0, 60),
+  );
+  check(
+    "  an explicit maxAgeSeconds overrides the default",
+    sdkCheck(leftover, { maxAgeSeconds: Infinity }).ok,
+  );
+  check(
+    "  and requireTraded:false carries no default age",
+    sdkCheck({ ...leftover, provenance: SdkProvenance.DERIVED }, { requireTraded: false }).ok,
+  );
   check(
     "a never-posted quote is caught",
     !sdkCheck({ ...traded, publishTime: 0n }).ok,

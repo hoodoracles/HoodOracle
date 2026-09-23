@@ -62,6 +62,14 @@ const floor = await oracle.conservativePrice("HOOD", "collateral");`}</pre>
         caller checks.
       </p>
 
+      <p>
+        It checks provenance, not age, and neither does <code>isLive</code>.
+        The on-chain quote is whatever was last relayed, so if relaying stops,
+        the last live print keeps reading as live. Check{" "}
+        <code>publishTime</code> as well. The example below does, against the
+        oracle&apos;s own 30-minute <code>maxQuoteAge</code>.
+      </p>
+
       <pre>{`interface IHoodOracle {
     struct Quote {
         uint128 price;           `}<span className="c">{`// 8 decimals`}</span>{`
@@ -85,10 +93,22 @@ const floor = await oracle.conservativePrice("HOOD", "collateral");`}</pre>
       <pre>{`contract LendingMarket {
     IHoodOracle public oracle;
 
+    `}<span className="c">{`// A live print is only live while it is fresh. Provenance`}</span>{`
+    `}<span className="c">{`// survives on-chain until the next relay replaces it.`}</span>{`
+    uint256 constant MAX_AGE = 30 minutes;
+
+    function _requireFresh(string calldata ticker) internal view {
+        require(
+            block.timestamp - oracle.getQuote(ticker).publishTime <= MAX_AGE,
+            "stale quote"
+        );
+    }
+
     `}<span className="c">{`// Liquidation demands a live print inside 50bps. A weekend`}</span>{`
     `}<span className="c">{`// quote reverts here rather than liquidating on a model.`}</span>{`
     function liquidate(address user, string calldata ticker) external {
         uint128 px = oracle.getPriceIfTraded(ticker, 50);
+        _requireFresh(ticker);
         _liquidate(user, px);
     }
 
@@ -105,6 +125,7 @@ const floor = await oracle.conservativePrice("HOOD", "collateral");`}</pre>
     `}<span className="c">{`// New borrows pause while the tape is shut.`}</span>{`
     function borrow(string calldata ticker, uint256 amount) external {
         require(oracle.isLive(ticker, 100), "market shut");
+        _requireFresh(ticker);
         _borrow(msg.sender, amount);
     }
 }`}</pre>

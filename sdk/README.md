@@ -22,12 +22,18 @@ const oracle = new HoodOracle();          // mainnet, no config needed
 const price = await oracle.price("HOOD");
 ```
 
-`price()` refuses by default. On a Saturday it throws:
+`price()` refuses by default. It wants an observed print no older than the
+oracle's own 30-minute `maxQuoteAge`. On a Saturday it throws:
 
 ```
 QuoteRejected: hoodoracle: HOOD rejected — provenance is DERIVED: the tape
 was shut and this price is a model output, not an observed print
 ```
+
+It also throws on a TRADED quote that has gone stale. The contract's
+`getPriceIfTraded` and `isLive` check provenance, not age, so if the relayer
+stops, its last live print keeps reading as live on-chain. The SDK does not
+let that through unless you pass `maxAgeSeconds` yourself.
 
 That is the library working. A tokenised share trades every hour of the week;
 the share behind it prices six and a half hours a day. Roughly a third of every
@@ -81,10 +87,13 @@ turns an honest band into extra leverage.
 **Pause new loans while the stock market is shut.**
 
 ```ts
-import { Provenance } from "@hoodoracle/sdk";
+import { Provenance, ageSeconds } from "@hoodoracle/sdk";
 
 const q = await oracle.getQuote("HOOD");
-if (q.provenance !== Provenance.TRADED) return closeNewBorrows();
+// Provenance alone is not enough: a stalled relayer leaves TRADED in place.
+if (q.provenance !== Provenance.TRADED || ageSeconds(q) > 1800) {
+  return closeNewBorrows();
+}
 ```
 
 ## Checking without throwing
@@ -212,7 +221,8 @@ comparison.
 `needsUpdate` · `status` · `simulate` · `postQuotes` · `oracle`
 
 **Pure helpers** — `band` · `conservativePrice` · `check` · `priceOrThrow` ·
-`ageSeconds` · `describeBand` · `isTradingSession` · `toDecimal` · `toScaled`
+`ageSeconds` · `describeBand` · `isTradingSession` · `toDecimal` · `toScaled` ·
+`DEFAULT_TRADED_MAX_AGE`
 
 **HTTP** — `fetchQuote` · `fetchBoard` · `fetchCoverage`
 

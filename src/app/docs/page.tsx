@@ -236,6 +236,14 @@ const ok = await verifyMessage({
 
       <ul>
         <li>
+          <code>getPriceIfTraded</code> and <code>isLive</code> check
+          provenance, not age. The contract holds whatever was last relayed, so
+          if relaying stops, a TRADED quote keeps reading as live. Check{" "}
+          <code>publishTime</code> in any path that acts on a price. The SDK
+          does this by default. <code>/api/health</code> reports a stalled
+          feed with a 503.
+        </li>
+        <li>
           The default provider is Yahoo&apos;s unofficial endpoint: no key, real
           print times, but not licensed for commercial redistribution. Add a
           licensed vendor before production.

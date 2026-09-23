@@ -45,10 +45,27 @@ export function isTradingSession(s: Session): boolean {
   return s === Session.REGULAR || s === Session.PRE || s === Session.POST;
 }
 
+/**
+ * How old a quote may be, by default, when an observed print is required.
+ *
+ * The oracle's own `maxQuoteAge`: it will not accept a quote older than this,
+ * so nothing older can have been posted as fresh. The contract does not apply
+ * it on read, though — `getPriceIfTraded` and `isLive` check provenance, not
+ * age — so a relayer that stops leaves its last TRADED quote reading as live
+ * indefinitely. On 21–23 Sep 2026 that was a Monday morning print, served for
+ * 42 hours through two closes. A live print with no age limit is not a live
+ * print, so the default path carries one.
+ */
+export const DEFAULT_TRADED_MAX_AGE = 1800;
+
 export interface Policy {
   /** Widest band still acceptable, in bps. Omit for no ceiling. */
   maxBps?: number;
-  /** Reject a quote whose publishTime is older than this many seconds. */
+  /**
+   * Reject a quote whose publishTime is older than this many seconds.
+   * Defaults to DEFAULT_TRADED_MAX_AGE while `requireTraded` is on, and to
+   * no limit when it is off. Pass `Infinity` to opt out explicitly.
+   */
   maxAgeSeconds?: number;
   /**
    * Require an observed print. Defaults to true, which is the safe default:
@@ -78,8 +95,8 @@ export interface Verdict {
 export function check(q: OnChainQuote, policy: Policy = {}): Verdict {
   const {
     maxBps,
-    maxAgeSeconds,
     requireTraded = true,
+    maxAgeSeconds = requireTraded ? DEFAULT_TRADED_MAX_AGE : undefined,
     minSources,
     now = Math.floor(Date.now() / 1000),
   } = policy;

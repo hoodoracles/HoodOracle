@@ -45,6 +45,7 @@ export {
   priceOrThrow,
   ageSeconds,
   describeBand,
+  DEFAULT_TRADED_MAX_AGE,
   QuoteRejected,
   type Policy,
   type Verdict,
