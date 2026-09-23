@@ -14,8 +14,11 @@ mkdirSync(OUT, { recursive: true });
 interface Check {
   path: string;
   name: string;
-  /** Text that must appear on the page. */
-  expect: string[];
+  /**
+   * Text that must appear on the page. An array entry is any-of: which
+   * provenance the board shows depends on the hour the suite runs.
+   */
+  expect: (string | string[])[];
   /** Optional wait for a selector before asserting. */
   waitFor?: string;
   full?: boolean;
@@ -25,7 +28,7 @@ const CHECKS: Check[] = [
   {
     path: "/",
     name: "dashboard",
-    expect: ["hoodoracle", "HOOD", "DERIVED", "error bar", "coverage"],
+    expect: ["hoodoracle", "HOOD", ["TRADED", "DERIVED", "STALE"], "error bar", "coverage"],
     // Wait for a real ticker row, not the loading placeholder.
     waitFor: ".board tbody .row-link",
     full: true,
@@ -106,9 +109,10 @@ for (const check of CHECKS) {
     await page.waitForTimeout(1600);
 
     const body = (await page.textContent("body")) ?? "";
-    const missing = check.expect.filter(
-      (t) => !body.toLowerCase().includes(t.toLowerCase()),
-    );
+    const lower = body.toLowerCase();
+    const missing = check.expect
+      .filter((t) => ![t].flat().some((alt) => lower.includes(alt.toLowerCase())))
+      .map((t) => [t].flat().join("|"));
 
     await page.screenshot({
       path: `${OUT}/${check.name}.png`,
