@@ -4,8 +4,12 @@ export const metadata = {
     "Post signed quotes on-chain and read them with session-aware policy.",
 };
 
-/** The mainnet market opened on HoodOracleFeed. Null until it is deployed. */
-const LIVE_MARKET: { feed: string; oracle: string; id: string } | null = null;
+/** The mainnet market opened on HoodOracleFeed, 23 Sep 2026. */
+const LIVE_MARKET: { feed: string; oracle: string; id: string } | null = {
+  feed: "0x334f71f9c9ff4efe730cf7b6e6b06c14c4b6a719",
+  oracle: "0xc65d284Efa6A3Df34540CBC8BA7C7fcbD0258604",
+  id: "0x1484485e9ebcd3c5b70c18ab30369ace2a2807e36962fd46f6c19be79a84a2c4",
+};
 
 /** test/MorphoForkDemo.t.sol, run against mainnet state on 23 Sep 2026. */
 const WEEKEND = `Friday 15:00 ET   the tape is open

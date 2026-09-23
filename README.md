@@ -436,6 +436,17 @@ The prices after Friday's are a scenario, signed by a throwaway key that the
 fork allow-lists. The production signer never signs a made-up quote, because
 a signature over invented data would be just as valid on mainnet.
 
+Live on mainnet since 23 Sep 2026, as a USDG / NVDA Morpho market at 77% LLTV:
+
+| | Address |
+|---|---|
+| **HoodOracleFeed** (NVDA, live prints only) | [`0x334f71f9c9ff4efe730cf7b6e6b06c14c4b6a719`](https://explorer.mainnet.chain.robinhood.com/address/0x334f71f9c9ff4efe730cf7b6e6b06c14c4b6a719) |
+| **Morpho oracle** (from the ChainlinkOracleV2 factory) | [`0xc65d284Efa6A3Df34540CBC8BA7C7fcbD0258604`](https://explorer.mainnet.chain.robinhood.com/address/0xc65d284Efa6A3Df34540CBC8BA7C7fcbD0258604) |
+| **Morpho market id** | `0x1484485e9ebcd3c5b70c18ab30369ace2a2807e36962fd46f6c19be79a84a2c4` |
+
+Outside the regular session both the feed and Morpho's `price()` revert
+`NotLivePrint`. That is the design, not an outage.
+
 ```bash
 DEPLOY_CONFIRM=yes npm run deploy:feed -- rh-mainnet   # feed, Morpho oracle, market
 ```
